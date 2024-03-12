@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SourceFileCollection xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Profile>Reach</Profile>
+  <Platform>DesktopGL</Platform>
+  <Config />
+  <SourceFiles>
+    <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Fonts/CourierPrime.spritefont</File>
+    <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Images/earth_image.jpg</File>
+    <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Images/MenuSelector.png</File>
+    <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Images/player.png</File>
+    <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Images/point.png</File>
+  </SourceFiles>
+  <DestFiles>
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
+  </DestFiles>
+</SourceFileCollection>
