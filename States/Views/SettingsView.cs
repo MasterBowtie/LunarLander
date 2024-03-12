@@ -28,11 +28,14 @@ namespace Apedaile {
     private SettingState _select;
     private SettingState _rebind;
     private bool _waitforKeyRelease = true;
+    private TimeSpan _delay = new TimeSpan(1000000);
 
 
     public override void setupInput()
     {
+      System.Console.WriteLine(_delay.Milliseconds);
       _select = new Select(this);
+      _rebind = new Rebind(this);
       _currentState = _select;
 
       _keyboard.registerCommand(Keys.Up, _waitforKeyRelease, new IInputDevice.CommandDelegate(moveUp));
@@ -57,7 +60,10 @@ namespace Apedaile {
 
     public override GameStateEnum processInput(GameTime gameTime)
     {
-      _currentState.processInput(gameTime);
+      _delay -= gameTime.ElapsedGameTime;
+      if (_delay.Milliseconds <= 0) {
+        _currentState.processInput(gameTime);
+      }
       if (_nextState != GameStateEnum.Settings) {
         _nextState = GameStateEnum.Settings;
         return GameStateEnum.MainMenu;
@@ -106,6 +112,7 @@ namespace Apedaile {
 
     public void exitState(GameTime gameTime, float value){
       _nextState = GameStateEnum.MainMenu;
+      _delay = new TimeSpan(1000000);
     }
 
     public void selectItem(GameTime gameTime, float value) {
@@ -114,7 +121,7 @@ namespace Apedaile {
 
 
     // This is the different states and these could have been a lot cleaner but this is how it goes for now
-    
+
     protected class Rebind: SettingState {
       private SettingsView parent;
 
@@ -123,11 +130,14 @@ namespace Apedaile {
       }
 
       public void render(GameTime gameTime) {
-        parent._select.render(gameTime);
+        // parent._select.render(gameTime);
         parent._spriteBatch.Begin();
+        Vector2 biggest = parent._mainFont.MeasureString("Press any key");
+        int buffer = 50;
+        float x = parent._graphics.PreferredBackBufferWidth/2 - biggest.X/2 - buffer/2;
 
-
-
+        parent.drawMenuItem(parent._mainFont, string.Format("Rebinding: {0}", parent._currentSelection), parent._graphics.PreferredBackBufferHeight * .1f, x, biggest.X + buffer, false);
+        parent.drawMenuItem(parent._mainFont, "Press Any Key", parent._graphics.PreferredBackBufferHeight/ 2, x, biggest.X + buffer, true);
         parent._spriteBatch.End();
       }
       
@@ -137,6 +147,12 @@ namespace Apedaile {
 
       public void processInput(GameTime gameTime) {
         if (Keyboard.GetState().IsKeyDown(Keys.Escape)) {
+          parent._currentState = parent._select;
+        }
+        Keys[] keys = Keyboard.GetState().GetPressedKeys();
+        if (keys.Length == 1 && keys[0] != Keys.Enter && keys[0] != Keys.Escape) {
+          parent._bindings[parent._currentSelection] = (parent._bindings[parent._currentSelection].Item1, keys[0]);
+          parent._player.bindCommand(parent._bindings[parent._currentSelection].Item1, keys[0]);
           parent._currentState = parent._select;
         }
       }
@@ -150,7 +166,7 @@ namespace Apedaile {
       }
 
       public void render(GameTime gameTime) {
-        Vector2 biggest = parent._mainFont.MeasureString("Rotate Right: W");
+        Vector2 biggest = parent._mainFont.MeasureString(string.Format("Rotate Right: {0}",parent._bindings[MenuState.RotateRight].Item2));
         int buffer = 50;
         float x = parent._graphics.PreferredBackBufferWidth/2 - biggest.X/2 - buffer/2;
       
