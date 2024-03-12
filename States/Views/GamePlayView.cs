@@ -38,7 +38,7 @@ namespace CS5410 {
 
     public override void setupInput() {
       _keyboard.registerCommand(Keys.Escape, _waitforKeyRelease, new IInputDevice.CommandDelegate(exitState));
-      _player.setupInput(_keyboard);
+      // _player.setupInput(_keyboard);
     }
 
     public void updateCommand(KeyboardInput keyboard, Keys key, bool keyPressOnly, IInputDevice.CommandDelegate callback) {
@@ -61,8 +61,6 @@ namespace CS5410 {
     public override void render(GameTime gameTime) {
       _spriteBatch.Begin();
       _spriteBatch.Draw(_background, _backRect, Color.White);
-      _player.render(gameTime);
-            
       _spriteBatch.End();
 
       foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
@@ -73,6 +71,10 @@ namespace CS5410 {
           _terrain.getStrip(), 0, _terrain.getStrip().Length,
           _terrain.getStripIndex(), 0, _terrain.getStrip().Length- 2);
       }
+
+      _spriteBatch.Begin();
+      _player.render(gameTime);
+      _spriteBatch.End();
     }
 
     public override void update(GameTime gameTime) {
@@ -82,6 +84,7 @@ namespace CS5410 {
 
     public override GameStateEnum processInput(GameTime gameTime) {
       _keyboard.Update(gameTime);
+      _player.processInput(gameTime);
       if (_nextState != GameStateEnum.GamePlay) {
         GameStateEnum nextState = _nextState;
         _nextState = GameStateEnum.GamePlay;

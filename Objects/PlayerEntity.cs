@@ -12,12 +12,27 @@ namespace Apedaile {
     public void initialize(GraphicsDeviceManager graphics, SpriteBatch spriteBatch) {
       _graphics = graphics;
       _spriteBatch = spriteBatch;
+      setupStates();
+      _keyboard = new KeyboardInput();
     }
+
+    protected abstract void setupStates();
+
+    public abstract void setupInput(KeyboardInput keyboard);
+
+    public abstract void processInput(GameTime gameTime);
 
     public abstract void loadContent(ContentManager contentManager);
 
     public abstract void update(GameTime gameTime);
 
     public abstract void render(GameTime gameTime);
+
+    protected interface PlayerState {
+      public void render(GameTime gameTime);
+      public void update(GameTime gameTime);
+      public void processInput(GameTime gameTime);
+
+    }
   }
 }

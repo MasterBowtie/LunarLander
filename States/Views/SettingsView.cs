@@ -28,12 +28,12 @@ namespace Apedaile {
     private SettingState _select;
     private SettingState _rebind;
     private bool _waitforKeyRelease = true;
-    private TimeSpan _delay = new TimeSpan(1000000);
+    private TimeSpan _delay = new TimeSpan(0, 0, 1);
 
 
     public override void setupInput()
     {
-      System.Console.WriteLine(_delay.Milliseconds);
+      // System.Console.WriteLine(_delay.Milliseconds);
       _select = new Select(this);
       _rebind = new Rebind(this);
       _currentState = _select;
@@ -50,7 +50,11 @@ namespace Apedaile {
       _bindings.Add(MenuState.Pause ,(new IInputDevice.CommandDelegate(_player.pause), Keys.P));
 
       foreach (var bind in _bindings) {
-        _player.bindCommand(bind.Value.Item1, bind.Value.Item2);
+        if (bind.Value == _bindings[MenuState.Pause]) {
+          _player.bindCommand(bind.Value.Item1, bind.Value.Item2, true);
+        } else {
+          _player.bindCommand(bind.Value.Item1, bind.Value.Item2, false);
+        }
       }
     }
 
@@ -112,7 +116,7 @@ namespace Apedaile {
 
     public void exitState(GameTime gameTime, float value){
       _nextState = GameStateEnum.MainMenu;
-      _delay = new TimeSpan(1000000);
+      _delay = new TimeSpan(0, 0, 1);
     }
 
     public void selectItem(GameTime gameTime, float value) {
@@ -152,7 +156,11 @@ namespace Apedaile {
         Keys[] keys = Keyboard.GetState().GetPressedKeys();
         if (keys.Length == 1 && keys[0] != Keys.Enter && keys[0] != Keys.Escape) {
           parent._bindings[parent._currentSelection] = (parent._bindings[parent._currentSelection].Item1, keys[0]);
-          parent._player.bindCommand(parent._bindings[parent._currentSelection].Item1, keys[0]);
+          if (parent._currentSelection == MenuState.Pause) {
+            parent._player.bindCommand(parent._bindings[parent._currentSelection].Item1, keys[0], true);
+          } else { 
+            parent._player.bindCommand(parent._bindings[parent._currentSelection].Item1, keys[0], false);
+          }
           parent._currentState = parent._select;
         }
       }

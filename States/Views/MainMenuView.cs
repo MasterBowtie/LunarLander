@@ -55,7 +55,7 @@ namespace CS5410 {
       
       _spriteBatch.Begin();
 
-      float bottom = drawMenuItem(_mainFont, "New Game", _graphics.PreferredBackBufferHeight * .2f , x, biggest.X + buffer, _currentSelection == MenuState.NewGame);
+      float bottom = drawMenuItem(_mainFont, "New Game", _graphics.PreferredBackBufferHeight * .4f , x, biggest.X + buffer, _currentSelection == MenuState.NewGame);
 
       bottom = drawMenuItem(_mainFont, "High Scores", bottom, x, biggest.X + buffer, _currentSelection == MenuState.HighScores);
       

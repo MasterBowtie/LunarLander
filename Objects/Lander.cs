@@ -4,20 +4,35 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Security.Cryptography.X509Certificates;
 
 
 namespace Apedaile {
   public class Lander : PlayerEntity {
+    private enum PlayerStates {
+      start,
+      playing,
+      paused,
+      win,
+      explode
+    }
+
     protected Texture2D _image;
     protected Rectangle _rectangle;
     protected Vector2 _renderVector;
+    protected SpriteFont _font;
+
+    private PlayerState _currentState;
+    private Dictionary<PlayerStates, PlayerState> _states;
+
     private bool _waitforKeyRelease = false;
-    private bool _continue = true;
 
     private float _radius;
 
-    private float _rotation = 0;
-    private float _rotationRate = .02f;
+    private float _rotation = (float) Math.PI/2;
+    private float _rotationRate = .001f;
     private float _fuel = 5;
 
     //position has to be a vector, since rectangle works in int and we need a constantly updated vector.
@@ -25,15 +40,29 @@ namespace Apedaile {
 
     // accelerators
     private Vector2 _momentum = new Vector2(0,0);
-    private Vector2 _accelerate = new Vector2(0, -.03f);
-    private Vector2 _gravity = new Vector2(0,.005f);
+    private Vector2 _accelerate = new Vector2(0, -.001f);
+    private Vector2 _gravity = new Vector2(0,.003f);
 
-    public void setupInput(KeyboardInput keyboard) {
+    protected override void setupStates() {
+      _states = new Dictionary<PlayerStates, PlayerState>();
+      _states.Add(PlayerStates.start, new Start(this));
+      _states.Add(PlayerStates.playing, new Playing(this));
+      _states.Add(PlayerStates.paused, new Pause(this));
+
+      _currentState = _states[PlayerStates.start];
+    }
+
+    public override void setupInput(KeyboardInput keyboard){
       _keyboard = keyboard;
     }
 
-    public void bindCommand(IInputDevice.CommandDelegate callback, Keys key) {
-      _keyboard.registerCommand(key, _waitforKeyRelease, callback);
+    public void bindCommand(IInputDevice.CommandDelegate callback, Keys key, bool pause) {
+      if (pause) {
+        _keyboard.registerCommand(key, true, callback);
+      }
+      else {
+        _keyboard.registerCommand(key, _waitforKeyRelease, callback);
+      }
     }
 
     public override void loadContent(ContentManager contentManager) {
@@ -44,76 +73,75 @@ namespace Apedaile {
       // System.Console.WriteLine("{0}, {1}, {2}, {3}", width, _image.Width, height, _image.Height);
       _rectangle = new Rectangle((int)(_position.X + width/2), (int)(_position.Y + height/2), (int) width, (int) height);
       _radius = _rectangle.Height/2;
+      _font = contentManager.Load<SpriteFont>("Fonts/CourierPrime");
+    }
+
+    public override void processInput(GameTime gameTime){
+      _currentState.processInput(gameTime);
     }
 
     public override void update(GameTime gameTime) {
-      if (_continue) {
-        _momentum = Vector2.Add(_momentum, _gravity);
-        _position = Vector2.Add(_position, _momentum);
-        _rectangle.X = (int)_position.X + _rectangle.Width/2;
-        _rectangle.Y = (int)_position.Y + _rectangle.Height/2;
-      }
+      _currentState.update(gameTime);
     }
 
     public override void render(GameTime gameTime) {
-      _spriteBatch.Draw(
-        _image, 
-        _rectangle, 
-        null,
-        Color.White,
-        _rotation,
-        _renderVector,
-        SpriteEffects.None,
-        0
-      ); 
-    }
-
-    public void freeze() {
-      System.Console.WriteLine(_momentum);
-      _continue = false;
+       _currentState.render(gameTime);
     }
 
     public void rotateLeft(GameTime gameTime, float value) {
-      if (_continue) {
-        _rotation -= _rotationRate * value;
+      if (_currentState == _states[PlayerStates.playing]) {
+        _rotation -= _rotationRate * gameTime.ElapsedGameTime.Milliseconds * value;
       }
     }
     
     public void rotateRight(GameTime gameTime, float value) {
-      if (_continue) {  
-      _rotation += _rotationRate * value;
+      if (_currentState == _states[PlayerStates.playing]) {  
+      _rotation += _rotationRate * gameTime.ElapsedGameTime.Milliseconds * value;
       }
     }
 
     // Attempted to use Framework.Vector2 Methods, but unable to find Rotate
     // Ended up copying the code from the Monogame Git Repo
     public void moveForward(GameTime gameTime, float value) {
+      if (_currentState == _states[PlayerStates.playing]) {
+        float X = _accelerate.X * gameTime.ElapsedGameTime.Milliseconds;
+        float Y = _accelerate.Y * gameTime.ElapsedGameTime.Milliseconds;
 
-      float X = _accelerate.X;
-      float Y = _accelerate.Y;
-
-      float cos = MathF.Cos(_rotation);
-      float sin = MathF.Sin(_rotation);
+        float cos = MathF.Cos(_rotation);
+        float sin = MathF.Sin(_rotation);
 
 
-      X = X * cos - Y * sin;
-      Y = _accelerate.X * sin + Y * cos;
-      _fuel -=.001f;
-      if (_fuel > 0) {
-        _momentum = Vector2.Add(_momentum, new Vector2(X, Y));
+        X = X * cos - Y * sin;
+        Y = _accelerate.X * sin + Y * cos;
+        _fuel -=.001f;
+        if (_fuel > 0) {
+          _momentum = Vector2.Add(_momentum, new Vector2(X, Y));
+        }
       }
     }
 
+    // this is very clunky and needs to be improved, but it works
     public void pause(GameTime gameTime, float value) {
-      // implement Entity States
+      Pause paused = (Pause)_states[PlayerStates.paused];
+      if (_currentState == _states[PlayerStates.paused]) {
+        // System.Console.WriteLine("UnPause");
+        (float, Vector2, Vector2) state = paused.getState();
+        _rotation = state.Item1;
+        _position = state.Item2;
+        _momentum = state.Item3;
+        
+        _currentState = _states[PlayerStates.playing];
+      } else {      
+        paused.saveState((_rotation, _position, _momentum));
+        _currentState = _states[PlayerStates.paused];
+      }
     }
 
     public void reset() {
-      _rotation = 0;
+      _rotation = (float) Math.PI/2;
       _position = new Vector2(50, 50);
       _momentum = new Vector2(0,0);
       _fuel = 5;
-      _continue = true;
     }
 
     public float getRadius() {
@@ -124,10 +152,6 @@ namespace Apedaile {
       // System.Console.WriteLine("{0},{1}",_position, _rectangle);
       // System.Console.WriteLine(_graphics.PreferredBackBufferHeight);
       return new Vector2(_position.X + _radius, _position.Y + _radius);
-    }
-
-    public void crash() {
-      
     }
 
     protected bool testPoints(Vector3 pt1, Vector3 pt2, Vector2 player, float radius) {
@@ -168,6 +192,113 @@ namespace Apedaile {
         index += 2;
       }
       return false;
+    }
+
+    protected class Start: PlayerState {
+      Lander parent;
+      TimeSpan countDown = new TimeSpan(0,0,3);
+      public Start(Lander parent) {
+        this.parent = parent;
+      }
+
+      public void render(GameTime gameTime) {
+        Vector2 stringSize = parent._font.MeasureString(string.Format("{0}", countDown.TotalSeconds));
+        parent._spriteBatch.DrawString(
+        parent._font, string.Format("{0}", countDown.TotalSeconds), new Vector2(parent._graphics.PreferredBackBufferWidth/2 - stringSize.X/2, parent._graphics.PreferredBackBufferHeight/2 - stringSize.Y/2), Color.White);
+
+        parent._spriteBatch.Draw(
+          parent._image, 
+          parent._rectangle, 
+          null,
+          Color.White,
+          parent._rotation,
+          parent._renderVector,
+          SpriteEffects.None,
+          0
+        );
+      }
+      public void update(GameTime gameTime) {
+        countDown -= gameTime.ElapsedGameTime;
+        if (countDown.TotalMilliseconds < 0) {
+          countDown = new TimeSpan(0,0,3);
+          parent._currentState = parent._states[PlayerStates.playing];
+        }
+      }
+
+      public void processInput(GameTime gameTime) {
+
+      }
+    }
+
+    protected class Playing: PlayerState {
+      Lander parent;
+      public Playing(Lander parent) {
+        this.parent = parent;
+      }
+
+      public void render(GameTime gameTime) {
+                parent._spriteBatch.Draw(
+          parent._image, 
+          parent._rectangle, 
+          null,
+          Color.White,
+          parent._rotation,
+          parent._renderVector,
+          SpriteEffects.None,
+          0
+        );
+      }
+
+      public void update(GameTime gameTime) {
+        parent._momentum = Vector2.Add(parent._momentum, parent._gravity);
+        parent._position = Vector2.Add(parent._position, parent._momentum);
+        parent._rectangle.X = (int)parent._position.X + parent._rectangle.Width/2;
+        parent._rectangle.Y = (int)parent._position.Y + parent._rectangle.Height/2;
+      }
+      
+      public void processInput(GameTime gameTime) {
+        parent._keyboard.Update(gameTime);
+      }
+    }
+  
+    protected class Pause: PlayerState {
+      Lander parent;
+      private (float, Vector2, Vector2) savedState;
+      
+      public Pause(Lander parent) {
+        this.parent = parent;
+        savedState = (parent._rotation, parent._position, parent._momentum);
+      }
+
+      public void render(GameTime gameTime) {
+        parent._spriteBatch.Draw(
+          parent._image, 
+          parent._rectangle, 
+          null,
+          Color.White,
+          parent._rotation,
+          parent._renderVector,
+          SpriteEffects.None,
+          0
+        );
+      }
+
+      public void update(GameTime gameTime) {
+        // No updates here
+      }
+
+      public void processInput(GameTime gameTime) {
+        parent._keyboard.Update(gameTime);
+      }
+
+      public void saveState((float, Vector2, Vector2) state) {
+        savedState = (parent._rotation, parent._position, parent._momentum);
+      }
+
+      public (float, Vector2, Vector2) getState() {
+        return savedState;
+      }
+
     }
   }
 }
