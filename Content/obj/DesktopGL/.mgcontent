@@ -5,12 +5,16 @@
   <Config />
   <SourceFiles>
     <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Fonts/CourierPrime.spritefont</File>
+    <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Fonts/CourierPrimeLg.spritefont</File>
+    <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Fonts/CourierPrimeSm.spritefont</File>
     <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Images/earth_image.jpg</File>
     <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Images/MenuSelector.png</File>
     <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Images/player.png</File>
     <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Images/point.png</File>
   </SourceFiles>
   <DestFiles>
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
     <File xsi:nil="true" />
     <File xsi:nil="true" />
     <File xsi:nil="true" />
