@@ -9,7 +9,6 @@ namespace CS5410 {
   public class GamePlayView : GameStateView {
     private GameStateEnum _nextState = GameStateEnum.GamePlay;
     private bool _waitforKeyRelease = true;
-    private bool _continue = true;
 
     private Texture2D _background;
     private Rectangle _backRect;
@@ -38,11 +37,8 @@ namespace CS5410 {
 
     public override void setupInput() {
       _keyboard.registerCommand(Keys.Escape, _waitforKeyRelease, new IInputDevice.CommandDelegate(exitState));
+      _keyboard.registerCommand(Keys.Enter, _waitforKeyRelease, new IInputDevice.CommandDelegate(nextLevel));
       // _player.setupInput(_keyboard);
-    }
-
-    public void updateCommand(KeyboardInput keyboard, Keys key, bool keyPressOnly, IInputDevice.CommandDelegate callback) {
-      keyboard.registerCommand(key, keyPressOnly, callback);
     }
 
     public void setupPlayer(Lander player) {
@@ -63,14 +59,7 @@ namespace CS5410 {
       _spriteBatch.Draw(_background, _backRect, Color.White);
       _spriteBatch.End();
 
-      foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
-      {
-        pass.Apply();
-        _graphics.GraphicsDevice.DrawUserIndexedPrimitives(
-          PrimitiveType.TriangleStrip,
-          _terrain.getStrip(), 0, _terrain.getStrip().Length,
-          _terrain.getStripIndex(), 0, _terrain.getStrip().Length- 2);
-      }
+      _terrain.render(_effect, _graphics);
 
       _spriteBatch.Begin();
       _player.render(gameTime);
@@ -95,9 +84,15 @@ namespace CS5410 {
 
     protected void exitState(GameTime gameTime, float value) {
       _nextState = GameStateEnum.MainMenu;
-      _continue = true;
       _terrain.buildTerrain(2);
       _player.reset();
+    }
+
+    protected void nextLevel(GameTime gameTime, float value) {
+      if (_player.win()) {
+        _terrain.buildTerrain(1);
+        _player.reset();
+      }
     }
 
     // These were development commands

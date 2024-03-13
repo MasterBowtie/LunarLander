@@ -48,6 +48,8 @@ namespace Apedaile {
       _states.Add(PlayerStates.start, new Start(this));
       _states.Add(PlayerStates.playing, new Playing(this));
       _states.Add(PlayerStates.paused, new Pause(this));
+      _states.Add(PlayerStates.win, new Win(this));
+      _states.Add(PlayerStates.explode, new Explode(this));
 
       _currentState = _states[PlayerStates.start];
     }
@@ -77,7 +79,7 @@ namespace Apedaile {
     }
 
     public override void processInput(GameTime gameTime){
-      _currentState.processInput(gameTime);
+      _keyboard.Update(gameTime);
     }
 
     public override void update(GameTime gameTime) {
@@ -120,28 +122,27 @@ namespace Apedaile {
       }
     }
 
-    // this is very clunky and needs to be improved, but it works
     public void pause(GameTime gameTime, float value) {
-      Pause paused = (Pause)_states[PlayerStates.paused];
       if (_currentState == _states[PlayerStates.paused]) {
-        // System.Console.WriteLine("UnPause");
-        (float, Vector2, Vector2) state = paused.getState();
-        _rotation = state.Item1;
-        _position = state.Item2;
-        _momentum = state.Item3;
-        
         _currentState = _states[PlayerStates.playing];
       } else {      
-        paused.saveState((_rotation, _position, _momentum));
+
         _currentState = _states[PlayerStates.paused];
       }
+    }
+
+    public bool win() {
+      return _currentState == _states[PlayerStates.win];
     }
 
     public void reset() {
       _rotation = (float) Math.PI/2;
       _position = new Vector2(50, 50);
       _momentum = new Vector2(0,0);
+      _rectangle.X = (int)_position.X + _rectangle.Width/2;
+      _rectangle.Y = (int)_position.Y + _rectangle.Height/2;
       _fuel = 5;
+      _currentState = _states[PlayerStates.start];
     }
 
     public float getRadius() {
@@ -176,7 +177,7 @@ namespace Apedaile {
       return false;
     }
 
-    public bool collision(VertexPositionColor[] floor) {
+    public void collision(VertexPositionColor[] floor) {
       int index = 2;
 
       Vector2 player = getCenter();
@@ -186,12 +187,17 @@ namespace Apedaile {
         Vector3 pt1 = floor[index - 2].Position;
         Vector3 pt2 = floor[index].Position;
         if (testPoints(pt1, pt2, player, radius)) {
-          return true;
+          if (pt2.Y == pt1.Y) {
+            _currentState = _states[PlayerStates.win];
+            return;
+          }
+          else{
+            _currentState = _states[PlayerStates.explode];
+            return;
+          }
         }
-
         index += 2;
       }
-      return false;
     }
 
     protected class Start: PlayerState {
@@ -202,9 +208,9 @@ namespace Apedaile {
       }
 
       public void render(GameTime gameTime) {
-        Vector2 stringSize = parent._font.MeasureString(string.Format("{0}", countDown.TotalSeconds));
+        Vector2 stringSize = parent._font.MeasureString(string.Format("{0}", (int)countDown.TotalSeconds));
         parent._spriteBatch.DrawString(
-        parent._font, string.Format("{0}", countDown.TotalSeconds), new Vector2(parent._graphics.PreferredBackBufferWidth/2 - stringSize.X/2, parent._graphics.PreferredBackBufferHeight/2 - stringSize.Y/2), Color.White);
+        parent._font, string.Format("{0}", (int)countDown.TotalSeconds + 1), new Vector2(parent._graphics.PreferredBackBufferWidth/2 - stringSize.X/2, parent._graphics.PreferredBackBufferHeight/2 - stringSize.Y/2), Color.White);
 
         parent._spriteBatch.Draw(
           parent._image, 
@@ -223,10 +229,6 @@ namespace Apedaile {
           countDown = new TimeSpan(0,0,3);
           parent._currentState = parent._states[PlayerStates.playing];
         }
-      }
-
-      public void processInput(GameTime gameTime) {
-
       }
     }
 
@@ -255,19 +257,13 @@ namespace Apedaile {
         parent._rectangle.X = (int)parent._position.X + parent._rectangle.Width/2;
         parent._rectangle.Y = (int)parent._position.Y + parent._rectangle.Height/2;
       }
-      
-      public void processInput(GameTime gameTime) {
-        parent._keyboard.Update(gameTime);
-      }
     }
   
     protected class Pause: PlayerState {
       Lander parent;
-      private (float, Vector2, Vector2) savedState;
       
       public Pause(Lander parent) {
         this.parent = parent;
-        savedState = (parent._rotation, parent._position, parent._momentum);
       }
 
       public void render(GameTime gameTime) {
@@ -286,19 +282,59 @@ namespace Apedaile {
       public void update(GameTime gameTime) {
         // No updates here
       }
+    }
+  
+    protected class Win: PlayerState {
+      Lander parent;
 
+      public Win(Lander parent) {
+        this.parent = parent;
+      }
+      public void render(GameTime gameTime) {
+        String message = "You Win!";
+        Vector2 stringSize = parent._font.MeasureString(message);
+        parent._spriteBatch.DrawString(
+        parent._font, message, new Vector2(parent._graphics.PreferredBackBufferWidth/2 - stringSize.X/2, parent._graphics.PreferredBackBufferHeight/2 - stringSize.Y/2), Color.White);
+
+        parent._spriteBatch.Draw(
+          parent._image, 
+          parent._rectangle, 
+          null,
+          Color.White,
+          parent._rotation,
+          parent._renderVector,
+          SpriteEffects.None,
+          0
+        );
+      }
+      public void update(GameTime gameTime) {
+
+      }
       public void processInput(GameTime gameTime) {
         parent._keyboard.Update(gameTime);
       }
 
-      public void saveState((float, Vector2, Vector2) state) {
-        savedState = (parent._rotation, parent._position, parent._momentum);
-      }
-
-      public (float, Vector2, Vector2) getState() {
-        return savedState;
-      }
-
     }
+  
+    protected class Explode: PlayerState {
+      Lander parent;
+
+      public Explode(Lander parent) {
+        this.parent = parent;
+      }
+      
+      public void render(GameTime gameTime) {
+        String message = "You Lose!";
+        Vector2 stringSize = parent._font.MeasureString(message);
+        parent._spriteBatch.DrawString(
+        parent._font, message, new Vector2(parent._graphics.PreferredBackBufferWidth/2 - stringSize.X/2, parent._graphics.PreferredBackBufferHeight/2 - stringSize.Y/2), Color.White);
+
+      }
+      
+      public void update(GameTime gameTime) {
+
+      }
+    }
+  
   }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using CS5410;
+using System.Security.Cryptography.X509Certificates;
 
 class Terrain {
     private int maxHeight;
@@ -17,6 +18,8 @@ class Terrain {
 
     private VertexPositionColor[] vertsTriStrip;
     private int[] indexTriStrip;
+    private VertexPositionColor[] borderStrip;
+    private int[] indexBorderStrip;
 
 
     MyRandom random = new MyRandom();
@@ -79,19 +82,22 @@ class Terrain {
 
 
         float minX = maxWidth * .15f;
-        float maxX = maxWidth - minX;
+        float sectionX = (maxWidth * .7f) / zones;
         float minY = maxHeight * .15f + minHeight;
         float maxY = maxHeight - minY;
 
         floor.Add(start);
 
+
+        //Place Safe Zones
         for (int z = 0; z < zones; z++) {
           int index = 0;
-          float x = random.nextRange(minX, maxX - zoneWidth);
+
+          float x = random.nextRange(minX, minX + sectionX - zoneWidth);
           float y = random.nextRange(minY, maxY);
           while (index < floor.Count) { 
             if (index != 0 && x < floor[index-1].X && x + zoneWidth > floor[index-1].X || x < floor[index].X && x + zoneWidth > floor[index].X) {
-              x = random.nextRange(minX, maxX - zoneWidth);
+              x = random.nextRange(minX + sectionX * z, minX + sectionX * z + sectionX - zoneWidth);
               index = 0;
             }
             else {
@@ -102,6 +108,7 @@ class Terrain {
           Vector3 zoneEnd = new Vector3(x + zoneWidth, y, 0);
           floor.Add(zoneStart);
           floor.Add(zoneEnd);
+          minX += sectionX;
         }
         floor.Add(end);
 
@@ -139,17 +146,47 @@ class Terrain {
 
         vertsTriStrip =  new VertexPositionColor[floor.Count * 2];
         indexTriStrip = new int[floor.Count * 2];
+        borderStrip =  new VertexPositionColor[floor.Count * 2];
+        indexBorderStrip = new int[floor.Count * 2];
+
         for (int i = 0; i < floor.Count; i++)
         {
 
             vertsTriStrip[i * 2].Position = floor[floor.Count - i - 1];
-            vertsTriStrip[i * 2].Color = Color.Red;
+            vertsTriStrip[i * 2].Color = Color.Gray;
+
+            borderStrip[i * 2].Position = new Vector3 (floor[floor.Count - i - 1].X,floor[floor.Count - i - 1].Y - 3,  floor[floor.Count - i - 1].Z);
+            borderStrip[i * 2].Color = Color.White;
 
             vertsTriStrip[i * 2 + 1].Position = new Vector3(floor[floor.Count - i - 1].X, maxHeight, 0);
-            vertsTriStrip[i * 2 + 1].Color = Color.Red;
+            vertsTriStrip[i * 2 + 1].Color = Color.Black;
+            
+            borderStrip[i * 2 + 1].Position = new Vector3(floor[floor.Count - i - 1].X, maxHeight, 0);
+            borderStrip[i * 2 + 1].Color = Color.White;
 
             indexTriStrip[i * 2] = i * 2;
             indexTriStrip[i * 2 + 1] = i * 2 + 1;
+            
+            indexBorderStrip[i * 2] = i * 2;
+            indexBorderStrip[i * 2 + 1] = i * 2 + 1;
         }
+      
+      
+    }
+
+    public void render(Effect effect, GraphicsDeviceManager graphics) {
+      foreach (EffectPass pass in effect.CurrentTechnique.Passes)
+      {
+        pass.Apply();
+        graphics.GraphicsDevice.DrawUserIndexedPrimitives(
+          PrimitiveType.TriangleStrip,
+          borderStrip, 0, borderStrip.Length,
+          indexBorderStrip, 0, borderStrip.Length- 2);
+
+        graphics.GraphicsDevice.DrawUserIndexedPrimitives(
+          PrimitiveType.TriangleStrip,
+          vertsTriStrip, 0, vertsTriStrip.Length,
+          indexTriStrip, 0, vertsTriStrip.Length- 2);
+      }
     }
 }

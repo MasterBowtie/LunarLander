@@ -31,8 +31,6 @@ namespace Apedaile {
     protected interface PlayerState {
       public void render(GameTime gameTime);
       public void update(GameTime gameTime);
-      public void processInput(GameTime gameTime);
-
     }
   }
 }
