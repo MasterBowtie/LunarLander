@@ -14,6 +14,8 @@ namespace CS5410 {
     private Rectangle _backRect;
     private Lander _player;
     private Terrain _terrain;
+    private float _landingRatio = .15f;
+    private float _level = 1;
 
     public void setupEffects()
     {
@@ -84,14 +86,18 @@ namespace CS5410 {
 
     protected void exitState(GameTime gameTime, float value) {
       _nextState = GameStateEnum.MainMenu;
+      _level = 1;
+      _terrain.setZoneWidth(_landingRatio - _level * .02f, _player.getRadius());
       _terrain.buildTerrain(2);
-      _player.reset();
+      _player.reset(true);
     }
 
     protected void nextLevel(GameTime gameTime, float value) {
       if (_player.win()) {
+        _level += 1;
+        _terrain.setZoneWidth(_landingRatio - _level * .02f, _player.getRadius()*2);
         _terrain.buildTerrain(1);
-        _player.reset();
+        _player.reset(false);
       }
     }
 
@@ -120,8 +126,5 @@ namespace CS5410 {
     // protected void decreaseRough(GameTime gameTime, float value) {
     //   _terrain.setRough(_terrain.getRough() - .01f);
     // }
-
-    // I'm too dumb to try and change this code in any meaningful way 
-    // Wasted WAYYYYYY too much time on collision and all that (redacted)!
   }
 }

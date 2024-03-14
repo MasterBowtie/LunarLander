@@ -59,8 +59,11 @@ class Terrain {
     }
 
     // parameter is a ratio of the total width
-    public void setZoneWidth ( float ratio) {
+    public void setZoneWidth (float ratio, float minSize) {
       zoneWidth = (maxWidth - minWidth) * ratio;
+      if (zoneWidth < minSize) {
+        zoneWidth = minSize;
+      }
     }
 
     public Vector3 midPoint(Vector3 pt1, Vector3 pt2) {
@@ -84,7 +87,7 @@ class Terrain {
         float minX = maxWidth * .15f;
         float sectionX = (maxWidth * .7f) / zones;
         float minY = maxHeight * .15f + minHeight;
-        float maxY = maxHeight - minY;
+        float maxY = maxHeight - maxHeight * .15f;
 
         floor.Add(start);
 

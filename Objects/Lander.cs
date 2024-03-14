@@ -42,6 +42,8 @@ namespace Apedaile {
     private Vector2 _accelerate = new Vector2(0, -.001f);
     private Vector2 _gravity = new Vector2(0,.003f);
 
+    private int _score = 0;
+
     protected override void setupStates() {
       _states = new Dictionary<PlayerStates, PlayerState>();
       _states.Add(PlayerStates.start, new Start(this));
@@ -88,16 +90,16 @@ namespace Apedaile {
 
     public override void render(GameTime gameTime) {
        _currentState.render(gameTime);
-       String rotationStr = String.Format("{0:0.00} deg", _rotation * 360/Math.PI);
+       String rotationStr = String.Format("{0:0.00} deg", _rotation * 180/Math.PI);
         String fuelStr =    String.Format("{0:0.00} g", _fuel);
-        String speedStr =   String.Format("{0:0.00} m/s", _momentum.Y * 6.666);
+        String speedStr =   String.Format("{0:0.00} m/s", _momentum.Length() * 6.666);
         Vector2 stringSize = _fontSm.MeasureString(rotationStr);
         int startY = _graphics.PreferredBackBufferHeight - (int)stringSize.Y * 3 ;
         _spriteBatch.DrawString(
           _fontSm,  
           rotationStr, 
           new Vector2(0, startY), 
-          (-5f <= _rotation * 360/Math.PI && _rotation * 360/Math.PI <= 5)? Color.Green : Color.White
+          (-5f <= _rotation * 180/Math.PI && _rotation * 180/Math.PI <= 5)? Color.Green : Color.White
         );
         _spriteBatch.DrawString(
           _fontSm, 
@@ -110,7 +112,7 @@ namespace Apedaile {
           _fontSm, 
           speedStr, 
           new Vector2(0, startY + stringSize.Y*2), 
-          (_momentum.Y < .3f)? Color.Green :  Color.White
+          (_momentum.Length() < .3f)? Color.Green :  Color.White
         );
     }
 
@@ -139,8 +141,8 @@ namespace Apedaile {
 
         X = X * cos - Y * sin;
         Y = _accelerate.X * sin + Y * cos;
-        _fuel -=.01f;
         if (_fuel > 0) {
+          _fuel -=.01f;
           _momentum = Vector2.Add(_momentum, new Vector2(X, Y));
         }
       }
@@ -159,13 +161,16 @@ namespace Apedaile {
       return _currentState == _states[PlayerStates.win];
     }
 
-    public void reset() {
+    public void reset(bool reset) {
       _rotation = (float) Math.PI/2;
       _position = new Vector2(50, 50);
       _momentum = new Vector2(0,0);
       _rectangle.X = (int)_position.X + _rectangle.Width/2;
       _rectangle.Y = (int)_position.Y + _rectangle.Height/2;
       _fuel = 5;
+      if (reset) {
+        _score = 0;
+      }
       _currentState = _states[PlayerStates.start];
     }
 
@@ -211,17 +216,31 @@ namespace Apedaile {
         Vector3 pt1 = floor[index - 2].Position;
         Vector3 pt2 = floor[index].Position;
         if (testPoints(pt1, pt2, player, radius)) {
-          if (pt2.Y == pt1.Y && -5f <= _rotation * 360/Math.PI && _rotation * 360/Math.PI <= 5 && _momentum.Y < .3f) {
+          if (pt2.Y == pt1.Y && -5f <= _rotation * 180/Math.PI && _rotation * 360/Math.PI <= 5 && _momentum.Length() < .3f) {
+            updateScore();
             _currentState = _states[PlayerStates.win];
             return;
           }
           else{
+            submitScore();
             _currentState = _states[PlayerStates.explode];
             return;
           }
         }
         index += 2;
       }
+    }
+
+    protected void updateScore(){
+      int fuelScore = (int) (2500 -  500 * _fuel);
+      int rotationScore =  500 - (int)(Math.Abs(_rotation) * 180/Math.PI / 5 * 500);
+      int velocityScore = 1000 - (int)(_momentum.Length() * 500);
+
+      _score += fuelScore + rotationScore + velocityScore;
+    }
+
+    protected void submitScore(){
+
     }
 
     protected class Start: PlayerState {
@@ -301,6 +320,13 @@ namespace Apedaile {
           SpriteEffects.None,
           0
         );
+        Vector2 stringSize = parent._fontLg.MeasureString("Paused");
+        parent._spriteBatch.DrawString(
+          parent._fontLg, 
+          "Paused", 
+          new Vector2(parent._graphics.PreferredBackBufferWidth/2 - stringSize.X/2, parent._graphics.PreferredBackBufferHeight/2 - stringSize.Y/2), 
+          Color.White
+        );
       }
 
       public void update(GameTime gameTime) {
@@ -351,8 +377,13 @@ namespace Apedaile {
       public void render(GameTime gameTime) {
         String message = "You Lose!";
         Vector2 stringSize = parent._fontLg.MeasureString(message);
+        float bottom = parent._graphics.PreferredBackBufferHeight/2 + stringSize.Y/2;
         parent._spriteBatch.DrawString(
         parent._fontLg, message, new Vector2(parent._graphics.PreferredBackBufferWidth/2 - stringSize.X/2, parent._graphics.PreferredBackBufferHeight/2 - stringSize.Y/2), Color.Red);
+        message = String.Format("Score: {0}", parent._score);
+        stringSize = parent._fontLg.MeasureString(message);
+        parent._spriteBatch.DrawString(
+        parent._fontLg, message, new Vector2(parent._graphics.PreferredBackBufferWidth/2 - stringSize.X/2, bottom + stringSize.Y/2), Color.White);
       }
       
       public void update(GameTime gameTime) {
