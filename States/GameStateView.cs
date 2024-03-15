@@ -4,15 +4,15 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace CS5410 {
   public abstract class GameStateView : IGameState {
-    protected GraphicsDeviceManager _graphics;
-    protected BasicEffect _effect;
-    protected SpriteBatch _spriteBatch;
-    protected KeyboardInput _keyboard;
+    protected GraphicsDeviceManager graphics;
+    protected BasicEffect effect;
+    protected SpriteBatch spriteBatch;
+    protected KeyboardInput keyboard;
 
     public void initialize(GraphicsDevice graphicsDevice, GraphicsDeviceManager graphics) {
-      _graphics = graphics;
-      _spriteBatch = new SpriteBatch(graphicsDevice);
-      _keyboard = new KeyboardInput();
+      this.graphics = graphics;
+      this.spriteBatch = new SpriteBatch(graphicsDevice);
+      this.keyboard = new KeyboardInput();
     }
     
     public abstract void setupInput();

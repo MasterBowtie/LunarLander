@@ -5,15 +5,15 @@ using Microsoft.Xna.Framework.Content;
 
 namespace Apedaile {
   public abstract class PlayerEntity : IEntity {
-    protected GraphicsDeviceManager _graphics;
-    protected SpriteBatch _spriteBatch;
-    protected KeyboardInput _keyboard;
+    protected GraphicsDeviceManager graphics;
+    protected SpriteBatch spriteBatch;
+    protected KeyboardInput keyboard;
 
     public void initialize(GraphicsDeviceManager graphics, SpriteBatch spriteBatch) {
-      _graphics = graphics;
-      _spriteBatch = spriteBatch;
+      this.graphics = graphics;
+      this.spriteBatch = spriteBatch;
       setupStates();
-      _keyboard = new KeyboardInput();
+      keyboard = new KeyboardInput();
     }
 
     protected abstract void setupStates();

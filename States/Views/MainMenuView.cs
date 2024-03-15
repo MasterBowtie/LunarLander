@@ -14,31 +14,35 @@ namespace CS5410 {
       Quit,
     }
 
-    private SpriteFont _mainFont;
-    private Texture2D _selector;
+    private SpriteFont mainFont;
+    private Texture2D selector;
+    private Texture2D background;
+    private Rectangle backRect;
 
-    private MenuState _currentSelection = MenuState.NewGame;
-    private GameStateEnum _nextState = GameStateEnum.MainMenu;
-    private bool _waitforKeyRelease = true;
+    private MenuState currentSelection = MenuState.NewGame;
+    private GameStateEnum nextState = GameStateEnum.MainMenu;
+    private bool waitforKeyRelease = true;
 
     public override void setupInput()
     {
-      _keyboard.registerCommand(Keys.Up, _waitforKeyRelease, new IInputDevice.CommandDelegate(moveUp));
-      _keyboard.registerCommand(Keys.Down, _waitforKeyRelease, new IInputDevice.CommandDelegate(moveDown));
-      _keyboard.registerCommand(Keys.Enter, _waitforKeyRelease, new IInputDevice.CommandDelegate(selectItem));
+      keyboard.registerCommand(Keys.Up, waitforKeyRelease, new IInputDevice.CommandDelegate(moveUp));
+      keyboard.registerCommand(Keys.Down, waitforKeyRelease, new IInputDevice.CommandDelegate(moveDown));
+      keyboard.registerCommand(Keys.Enter, waitforKeyRelease, new IInputDevice.CommandDelegate(selectItem));
     }
 
     public override void loadContent(ContentManager contentManager){
-      _mainFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime");
-      _selector = contentManager.Load<Texture2D>("Images/MenuSelector");
+      mainFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime");
+      selector = contentManager.Load<Texture2D>("Images/MenuSelector");
+      background = contentManager.Load<Texture2D>("Images/earth_image");
+      backRect = new Rectangle(graphics.PreferredBackBufferWidth - background.Width/4, 0, background.Width/4, background.Height/4);
 
     }
 
     public override GameStateEnum processInput(GameTime gameTime){
-      _keyboard.Update(gameTime);
-      if (_nextState != GameStateEnum.MainMenu) {
-        GameStateEnum nextState = _nextState;
-        _nextState = GameStateEnum.MainMenu;
+      keyboard.Update(gameTime);
+      if (nextState != GameStateEnum.MainMenu) {
+        GameStateEnum nextState = this.nextState;
+        this.nextState = GameStateEnum.MainMenu;
         return nextState;
       }
       return GameStateEnum.MainMenu;
@@ -49,69 +53,71 @@ namespace CS5410 {
     }
 
     public override void render(GameTime gameTime){
-      Vector2 biggest = _mainFont.MeasureString("High Scores");
+      Vector2 biggest = mainFont.MeasureString("High Scores");
       int buffer = 50;
-      float x = _graphics.PreferredBackBufferWidth/2 - biggest.X/2 - buffer/2;
+      float x = graphics.PreferredBackBufferWidth/2 - biggest.X/2 - buffer/2;
       
-      _spriteBatch.Begin();
+      spriteBatch.Begin();
 
-      float bottom = drawMenuItem(_mainFont, "New Game", _graphics.PreferredBackBufferHeight * .4f , x, biggest.X + buffer, _currentSelection == MenuState.NewGame);
+      spriteBatch.Draw(background, backRect, Color.White);
 
-      bottom = drawMenuItem(_mainFont, "High Scores", bottom, x, biggest.X + buffer, _currentSelection == MenuState.HighScores);
+      float bottom = drawMenuItem(mainFont, "New Game", graphics.PreferredBackBufferHeight * .4f , x, biggest.X + buffer, currentSelection == MenuState.NewGame);
+
+      bottom = drawMenuItem(mainFont, "High Scores", bottom, x, biggest.X + buffer, currentSelection == MenuState.HighScores);
       
-      bottom = drawMenuItem(_mainFont, "Settings", bottom, x, biggest.X + buffer, _currentSelection == MenuState.Settings);
+      bottom = drawMenuItem(mainFont, "Settings", bottom, x, biggest.X + buffer, currentSelection == MenuState.Settings);
       
-      bottom = drawMenuItem(_mainFont, "About", bottom, x, biggest.X + buffer, _currentSelection == MenuState.About);
+      bottom = drawMenuItem(mainFont, "About", bottom, x, biggest.X + buffer, currentSelection == MenuState.About);
 
-      bottom = drawMenuItem(_mainFont, "Quit", bottom, x, biggest.X + buffer, _currentSelection == MenuState.Quit);
+      bottom = drawMenuItem(mainFont, "Quit", bottom, x, biggest.X + buffer, currentSelection == MenuState.Quit);
 
-      _spriteBatch.End();
+      spriteBatch.End();
     }
 
     private float drawMenuItem(SpriteFont font, string text, float y, float x, float xSize, bool selected) {
       Vector2 stringSize = font.MeasureString(text);
       
       if (selected) {
-        _spriteBatch.Draw(_selector, new Rectangle((int)x, (int)y, (int) xSize, (int)stringSize.Y), Color.White);
+        spriteBatch.Draw(selector, new Rectangle((int)x, (int)y, (int) xSize, (int)stringSize.Y), Color.White);
       }
-      _spriteBatch.DrawString(
-        font, text, new Vector2(_graphics.PreferredBackBufferWidth/2 - stringSize.X/2, y), Color.White);
+      spriteBatch.DrawString(
+        font, text, new Vector2(graphics.PreferredBackBufferWidth/2 - stringSize.X/2, y), Color.White);
 
       return y + stringSize.Y;
     }
 
     public void moveUp(GameTime gameTime, float value) {
-      if (_currentSelection != MenuState.NewGame) {
-        _currentSelection = _currentSelection - 1;
+      if (currentSelection != MenuState.NewGame) {
+        currentSelection = currentSelection - 1;
       }
     }
 
     public void moveDown(GameTime gameTime, float value) {
-      if (_currentSelection != MenuState.Quit) {
-        _currentSelection = _currentSelection + 1;
+      if (currentSelection != MenuState.Quit) {
+        currentSelection = currentSelection + 1;
       }
     }
 
     public void selectItem(GameTime gameTime, float value) {
-      switch (_currentSelection) {
+      switch (currentSelection) {
         case MenuState.NewGame: {
-          _nextState = GameStateEnum.GamePlay;
+          nextState = GameStateEnum.GamePlay;
           break;
         }
         case MenuState.HighScores: {
-          _nextState = GameStateEnum.HighScores;
+          nextState = GameStateEnum.HighScores;
           break;
         }
         case MenuState.Settings: {
-          _nextState = GameStateEnum.Settings;
+          nextState = GameStateEnum.Settings;
           break;
         }
         case MenuState.About: {
-          _nextState = GameStateEnum.About;
+          nextState = GameStateEnum.About;
           break;
         }
         case MenuState.Quit: {
-          _nextState = GameStateEnum.Exit;
+          nextState = GameStateEnum.Exit;
           break;
         }
       }

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using CS5410;
-using System.Security.Cryptography.X509Certificates;
 
-class Terrain {
+namespace Apedaile{
+  public class Terrain {
     private int maxHeight;
     private int minHeight;
     private int minWidth;
@@ -192,4 +192,5 @@ class Terrain {
           indexTriStrip, 0, vertsTriStrip.Length- 2);
       }
     }
+  }
 }

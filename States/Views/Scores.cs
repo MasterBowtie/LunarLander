@@ -13,27 +13,12 @@ namespace Apedaile {
 
     public void submitScore(uint score, ushort level)
     {
-      if (HighScores.Count < 5)
-      {
-        HighScores.Add((score, level));
-
-      }
-      else
-      {
-        for (int i = 0; i < HighScores.Count; i++)
-        {
-          var item = HighScores[i];
-          if (score > item.Item1)
-          {
-            HighScores.Insert(i, (score, level));
-          }
-        }
-        if (HighScores.Count > 5)
-        {
-          HighScores.RemoveRange(5, HighScores.Count);
-        }
-      }
+      HighScores.Add((score, level));
       HighScores.Sort(compare);
+      if (HighScores.Count > 5)
+      {
+        HighScores.RemoveAt(5);
+      }
     }
 
     public int compare((uint, ushort) item1, (uint, ushort) item2) {
