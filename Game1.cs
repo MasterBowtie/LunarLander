@@ -35,26 +35,31 @@ public class LunarLander : Game
     _states = new Dictionary<GameStateEnum, IGameState> {
       {GameStateEnum.MainMenu, new MainMenuView()},
       {GameStateEnum.GamePlay, new GamePlayView()},
-      {GameStateEnum.Settings, new SettingsView()}
+      {GameStateEnum.Settings, new SettingsView()},
+      {GameStateEnum.HighScores, new ScoresView()}
     };
 
     // Give all game states a chance to initialize, other than constructor
     foreach(var item in _states) {
       item.Value.initialize(this.GraphicsDevice, _graphics);
     }
+    var scores = (ScoresView)_states[GameStateEnum.HighScores];
+    var play = (GamePlayView)_states[GameStateEnum.GamePlay];
 
     // Attach player to GamePlay and Settings
-    var play = (GamePlayView)_states[GameStateEnum.GamePlay];
     var settings = (SettingsView)_states[GameStateEnum.Settings];
     Lander player = new Lander();
 
     play.setupPlayer(player);
+    play.attachScore(scores);
     settings.setupPlayer(player);
 
     // Give all game states a chance to initialize Inputs
     foreach(var item in _states) {
       item.Value.setupInput();
     }
+
+
 
     // Start in the Main Menu
     _currentState = _states[GameStateEnum.MainMenu];

@@ -42,7 +42,7 @@ namespace Apedaile {
     private Vector2 _accelerate = new Vector2(0, -.001f);
     private Vector2 _gravity = new Vector2(0,.003f);
 
-    private int _score = 0;
+    private uint _score = 0;
 
     protected override void setupStates() {
       _states = new Dictionary<PlayerStates, PlayerState>();
@@ -222,7 +222,6 @@ namespace Apedaile {
             return;
           }
           else{
-            submitScore();
             _currentState = _states[PlayerStates.explode];
             return;
           }
@@ -232,15 +231,15 @@ namespace Apedaile {
     }
 
     protected void updateScore(){
-      int fuelScore = (int) (2500 -  500 * _fuel);
-      int rotationScore =  500 - (int)(Math.Abs(_rotation) * 180/Math.PI / 5 * 500);
-      int velocityScore = 1000 - (int)(_momentum.Length() * 500);
+      int fuelScore = (int) (250 -  50 * _fuel);
+      int rotationScore =  50 - (int)(Math.Abs(_rotation) * 180/Math.PI / 5 * 50);
+      int velocityScore = 10 - (int)(_momentum.Length() * 50);
 
-      _score += fuelScore + rotationScore + velocityScore;
+      _score += (uint)(fuelScore + rotationScore + velocityScore);
     }
 
-    protected void submitScore(){
-
+    public uint getScore(){
+      return _score;
     }
 
     protected class Start: PlayerState {

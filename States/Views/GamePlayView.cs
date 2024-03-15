@@ -1,11 +1,11 @@
 using System;
-using Apedaile;
+using CS5410;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace CS5410 {
+namespace Apedaile {
   public class GamePlayView : GameStateView {
     private GameStateEnum _nextState = GameStateEnum.GamePlay;
     private bool _waitforKeyRelease = true;
@@ -15,7 +15,8 @@ namespace CS5410 {
     private Lander _player;
     private Terrain _terrain;
     private float _landingRatio = .15f;
-    private float _level = 1;
+    private ushort _level = 1;
+    private ScoresView _score; 
 
     public void setupEffects()
     {
@@ -35,6 +36,10 @@ namespace CS5410 {
         CullMode = CullMode.CullClockwiseFace,   // CullMode.None If you want to not worry about triangle winding order
         MultiSampleAntiAlias = true,
       };
+    }
+
+    public void attachScore(ScoresView score) {
+      _score = score;
     }
 
     public override void setupInput() {
@@ -85,11 +90,13 @@ namespace CS5410 {
     }
 
     protected void exitState(GameTime gameTime, float value) {
+      _score.saveScore(_player.getScore(), (ushort)(_level - 1));
       _nextState = GameStateEnum.MainMenu;
       _level = 1;
       _terrain.setZoneWidth(_landingRatio - _level * .02f, _player.getRadius());
       _terrain.buildTerrain(2);
       _player.reset(true);
+
     }
 
     protected void nextLevel(GameTime gameTime, float value) {
@@ -102,10 +109,6 @@ namespace CS5410 {
     }
 
     // These were development commands
-
-    // protected void pauseState(GameTime gameTime, float value) {
-    //   _continue = !_continue;
-    // }
 
     // protected void buildTerrain(GameTime gameTime, float value) {
     //   _terrain.buildTerrain(2);
