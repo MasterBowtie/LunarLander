@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Threading.Tasks;
+using Microsoft.Xna.Framework.Media;
 
 namespace Apedaile
 {
@@ -16,10 +17,10 @@ namespace Apedaile
     private SpriteFont titleFont;
     private Texture2D background;
     private Rectangle backRect;
+    private Song music;
     private Scores scores = null;
     private SaveScore save;
-    private bool loading = false;
-    private bool saving = false;
+
 
     public override void loadContent(ContentManager contentManager)
     {
@@ -27,6 +28,10 @@ namespace Apedaile
       titleFont = contentManager.Load<SpriteFont>("Fonts/CourierPrimeLg");
       background = contentManager.Load<Texture2D>("Images/earth_image");
       backRect = new Rectangle(graphics.PreferredBackBufferWidth - background.Width/4, 0, background.Width/4, background.Height/4);
+    }
+    
+    public override void loadMusic(Song music) {
+      this.music = music;
     }
 
     public void setScores(Scores scores, SaveScore saveScore) {
@@ -74,10 +79,14 @@ namespace Apedaile
 
     public override void setupInput() {
       keyboard.registerCommand(Keys.Escape, true, exitState);
+      keyboard.registerCommand(Keys.F1, true, pauseMusic);
+      keyboard.registerCommand(Keys.F2, true, resumeMusic);
     }
 
     public override void update(GameTime gameTime) {
-      // System.Console.WriteLine("Pending");
+      if (MediaPlayer.State == MediaState.Stopped) {
+        MediaPlayer.Play(music);
+      }
     }
 
     private float drawMenuItem(SpriteFont font, string text, float y)
@@ -102,6 +111,16 @@ namespace Apedaile
         System.Console.WriteLine("New Scores");
       }
       save(scores);
+    }
+
+    private void pauseMusic(GameTime gameTime, float value) {
+      MediaPlayer.Pause();
+      System.Console.WriteLine("Music Paused");
+    }
+
+    private void resumeMusic(GameTime gameTime, float value) {
+      MediaPlayer.Resume();
+      System.Console.WriteLine("Music Resume");
     }
   }
 

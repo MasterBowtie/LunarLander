@@ -2,7 +2,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
- 
+using Microsoft.Xna.Framework.Media;
+
 
 namespace CS5410 {
   public class MainMenuView : GameStateView {
@@ -15,9 +16,13 @@ namespace CS5410 {
     }
 
     private SpriteFont mainFont;
+    private SpriteFont lgFont;
+
     private Texture2D selector;
     private Texture2D background;
     private Rectangle backRect;
+    private Song music;
+    private bool canPlayMusic = true;
 
     private MenuState currentSelection = MenuState.NewGame;
     private GameStateEnum nextState = GameStateEnum.MainMenu;
@@ -28,14 +33,20 @@ namespace CS5410 {
       keyboard.registerCommand(Keys.Up, waitforKeyRelease, new IInputDevice.CommandDelegate(moveUp));
       keyboard.registerCommand(Keys.Down, waitforKeyRelease, new IInputDevice.CommandDelegate(moveDown));
       keyboard.registerCommand(Keys.Enter, waitforKeyRelease, new IInputDevice.CommandDelegate(selectItem));
+      keyboard.registerCommand(Keys.F1, waitforKeyRelease, new IInputDevice.CommandDelegate(pauseMusic));
+      keyboard.registerCommand(Keys.F2, waitforKeyRelease, new IInputDevice.CommandDelegate(resumeMusic));
     }
 
     public override void loadContent(ContentManager contentManager){
       mainFont = contentManager.Load<SpriteFont>("Fonts/CourierPrime");
+      lgFont = contentManager.Load<SpriteFont>("Fonts/CourierPrimeLg");
       selector = contentManager.Load<Texture2D>("Images/MenuSelector");
-      background = contentManager.Load<Texture2D>("Images/earth_image");
-      backRect = new Rectangle(graphics.PreferredBackBufferWidth - background.Width/4, 0, background.Width/4, background.Height/4);
+      background = contentManager.Load<Texture2D>("Images/background");
+      backRect = new Rectangle(0, 0, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight);
+    }
 
+    public override void loadMusic(Song music) {
+      this.music = music;
     }
 
     public override GameStateEnum processInput(GameTime gameTime){
@@ -49,7 +60,9 @@ namespace CS5410 {
     }
 
     public override void update(GameTime gameTime){
-      // Nothing here, move along, move along.
+      if (MediaPlayer.State == MediaState.Stopped) {
+        MediaPlayer.Play(music);
+      }
     }
 
     public override void render(GameTime gameTime){
@@ -60,6 +73,8 @@ namespace CS5410 {
       spriteBatch.Begin();
 
       spriteBatch.Draw(background, backRect, Color.White);
+
+      drawMenuItem(lgFont, "Lunar Lander", graphics.PreferredBackBufferHeight * .1f, graphics.PreferredBackBufferWidth/2 - lgFont.MeasureString("Lunar Lander").X/2, lgFont.MeasureString("Lunar Lander").X, false);
 
       float bottom = drawMenuItem(mainFont, "New Game", graphics.PreferredBackBufferHeight * .4f , x, biggest.X + buffer, currentSelection == MenuState.NewGame);
 
@@ -121,6 +136,16 @@ namespace CS5410 {
           break;
         }
       }
+    }
+
+    public void pauseMusic(GameTime gameTime, float value) {
+      MediaPlayer.Pause();
+      System.Console.WriteLine("Music Paused");
+    }
+
+    public void resumeMusic(GameTime gameTime, float value) {
+      MediaPlayer.Resume();
+      System.Console.WriteLine("Music Resume");
     }
   }
 }

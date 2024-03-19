@@ -1,5 +1,6 @@
 using CS5410;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -25,6 +26,12 @@ namespace Apedaile {
     protected Vector2 renderVector;
     protected SpriteFont fontLg;
     protected SpriteFont fontSm;
+
+    protected SoundEffect thrust;
+    protected TimeSpan thrustDur;
+    protected SoundEffect explosion;
+
+
     protected ParticleSystem particleSystem;
     protected Terrain terrain;
 
@@ -82,14 +89,20 @@ namespace Apedaile {
       image = contentManager.Load<Texture2D>("Images/player");
       menuBG = contentManager.Load<Texture2D>("Images/menu");
       menuRt = new Rectangle(0,0,10,10);
+      
       renderVector = new Vector2(image.Width/2, image.Height/2);
       float width =  graphics.PreferredBackBufferHeight/10;
       float height = width/image.Width * image.Height;
       // System.Console.WriteLine("{0}, {1}, {2}, {3}", width, image.Width, height, image.Height);
       rectangle = new Rectangle((int)(position.X + width/2), (int)(position.Y + height/2), (int) width, (int) height);
       radius = rectangle.Height/2;
+      
       fontLg = contentManager.Load<SpriteFont>("Fonts/CourierPrimeLg");
       fontSm = contentManager.Load<SpriteFont>("Fonts/CourierPrimeSm");
+
+      thrust = contentManager.Load<SoundEffect>("Sounds/rocketthrust");
+      thrustDur = thrust.Duration;
+      explosion = contentManager.Load<SoundEffect>("Sounds/hq-explosion");
     }
 
     public override void processInput(GameTime gameTime){
@@ -98,6 +111,7 @@ namespace Apedaile {
 
     public override void update(GameTime gameTime) {
       currentState.update(gameTime);
+      thrustDur -= gameTime.ElapsedGameTime;
     }
 
     public override void render(GameTime gameTime) {
@@ -160,8 +174,13 @@ namespace Apedaile {
     // Ended up copying the code from the Monogame Git Repo
     public void moveForward(GameTime gameTime, float value) {
       if (currentState == states[PlayerStates.playing]) {
-        float X = accelerate.X * gameTime.ElapsedGameTime.Milliseconds;
-        float Y = accelerate.Y * gameTime.ElapsedGameTime.Milliseconds;
+        
+        if (thrustDur.TotalMilliseconds <= 0) {
+          thrust.Play();
+          thrustDur = thrust.Duration;
+        }
+        float X = accelerate.X * gameTime.ElapsedGameTime.Milliseconds * value;
+        float Y = accelerate.Y * gameTime.ElapsedGameTime.Milliseconds * value;
 
         float cos = MathF.Cos(rotation);
         float sin = MathF.Sin(rotation);
@@ -181,6 +200,7 @@ namespace Apedaile {
     }
 
     private void explode() {
+      explosion.Play();
       for (int i = 0; i < 360 ; i += 10) {
         particleSystem.create(getCenter(), (float)(i/(2 *Math.PI)));
       }

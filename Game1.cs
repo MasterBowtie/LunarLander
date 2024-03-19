@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using CS5410;
 using Apedaile;
 using System;
+using Microsoft.Xna.Framework.Media;
 
 namespace LunarLander;
 
@@ -21,6 +22,8 @@ public class LunarLander : Game
   private bool saving = false;
   public Scores scores = null;
   public KeyBindings keyBindings = null;
+
+  public Song music;
   
   public LunarLander() {
     graphics = new GraphicsDeviceManager(this);
@@ -47,7 +50,8 @@ public class LunarLander : Game
       {GameStateEnum.MainMenu, new MainMenuView()},
       {GameStateEnum.GamePlay, new GamePlayView()},
       {GameStateEnum.Settings, new SettingsView()},
-      {GameStateEnum.HighScores, new ScoresView()}
+      {GameStateEnum.HighScores, new ScoresView()},
+      {GameStateEnum.About, new AboutView()}
     };
 
     // Give all game states a chance to initialize, other than constructor
@@ -88,12 +92,17 @@ public class LunarLander : Game
   }
 
   protected override void LoadContent() {
+    music = this.Content.Load<Song>("Sounds/Big_Eyes");
     // Load Content for all the game states
     foreach (var item in states) {
       item.Value.loadContent(this.Content);
+      item.Value.loadMusic(music);
     }
+
     GamePlayView gameplay = (GamePlayView)states[GameStateEnum.GamePlay];
     gameplay.setupEffects();
+
+
   }
 
   protected override void Update(GameTime gameTime) {

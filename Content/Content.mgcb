@@ -46,6 +46,18 @@
 /processorParam:TextureFormat=Color
 /build:Images/1968_Earthrise.jpeg
 
+#begin Images/background.jpg
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Images/background.jpg
+
 #begin Images/earth_image.jpg
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -117,4 +129,22 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Images/point.png
+
+#begin Sounds/Big_Eyes.mp3
+/importer:Mp3Importer
+/processor:SongProcessor
+/processorParam:Quality=Best
+/build:Sounds/Big_Eyes.mp3
+
+#begin Sounds/hq-explosion.mp3
+/importer:Mp3Importer
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/hq-explosion.mp3
+
+#begin Sounds/rocketthrust.mp3
+/importer:Mp3Importer
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/rocketthrust.mp3
 

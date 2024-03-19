@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Threading.Tasks;
 using System.Linq;
+using Microsoft.Xna.Framework.Media;
 
 namespace Apedaile {
   public class SettingsView: GameStateView {
@@ -27,6 +28,7 @@ namespace Apedaile {
     private KeyBindings bindings;
     private Dictionary<MenuState, IInputDevice.CommandDelegate> commands = new Dictionary<MenuState, IInputDevice.CommandDelegate>();
     private SaveBinding save;
+    private Song music;
 
     private MenuState currentSelection = MenuState.Thrust;
     private GameStateEnum nextState = GameStateEnum.Settings;
@@ -48,11 +50,17 @@ namespace Apedaile {
       keyboard.registerCommand(Keys.Down, waitforKeyRelease, new IInputDevice.CommandDelegate(moveDown));
       keyboard.registerCommand(Keys.Enter, waitforKeyRelease, new IInputDevice.CommandDelegate(selectItem));
       keyboard.registerCommand(Keys.Escape, waitforKeyRelease, new IInputDevice.CommandDelegate(exitState));
+      keyboard.registerCommand(Keys.F1, waitforKeyRelease, pauseMusic);
+      keyboard.registerCommand(Keys.F2, waitforKeyRelease, resumeMusic);
 
       commands.Add(MenuState.Thrust, new IInputDevice.CommandDelegate(player.moveForward));
       commands.Add(MenuState.RotateRight, new IInputDevice.CommandDelegate(player.rotateRight));
       commands.Add(MenuState.RotateLeft, new IInputDevice.CommandDelegate(player.rotateLeft));
       commands.Add(MenuState.Pause, new IInputDevice.CommandDelegate(player.pause));
+    }
+
+    public override void loadMusic(Song music) {
+      this.music = music;
     }
 
     public void attachBindings(KeyBindings bindings, SaveBinding save) {
@@ -119,6 +127,9 @@ namespace Apedaile {
     public override void update(GameTime gameTime)
     {
       currentState.update(gameTime);
+      if (MediaPlayer.State == MediaState.Stopped) {
+        MediaPlayer.Play(music);
+      }
     }
 
     private float drawMenuItem(SpriteFont font, string text, float y, float x, float xSize, bool selected) {
@@ -214,12 +225,12 @@ namespace Apedaile {
       public void render(GameTime gameTime) {
         var bindings = parent.bindings.getBindings();
         Vector2 biggest = parent.mainFont.MeasureString(string.Format("Rotate Right: {0}", bindings[MenuState.RotateRight.ToString()]));
-        int buffer = 50;
+        int buffer = 30;
         float x = parent.graphics.PreferredBackBufferWidth/2 - biggest.X/2 - buffer/2;
       
         parent.spriteBatch.Begin();
 
-        float bottom = parent.drawMenuItem(parent.mainFont, string.Format("Thrust: {0}", bindings[MenuState.Thrust.ToString()]), parent.graphics.PreferredBackBufferHeight * .2f , x, biggest.X + buffer, parent.currentSelection == MenuState.Thrust);
+        float bottom = parent.drawMenuItem(parent.mainFont, string.Format("Thrust: {0}", bindings[MenuState.Thrust.ToString()]), parent.graphics.PreferredBackBufferHeight * .1f , x, biggest.X + buffer, parent.currentSelection == MenuState.Thrust);
 
         bottom = parent.drawMenuItem(parent.mainFont, string.Format("Rotate Right: {0}", bindings[MenuState.RotateRight.ToString()]), bottom, x, biggest.X + buffer, parent.currentSelection == MenuState.RotateRight);
       
@@ -231,6 +242,10 @@ namespace Apedaile {
 
         bottom = parent.drawMenuItem(parent.mainFont, "Exit: Escape", bottom, x, biggest.X + buffer, false);
 
+        bottom = parent.drawMenuItem(parent.mainFont, "Pause Music: F1", bottom, x, biggest.X + buffer, false);
+
+        bottom = parent.drawMenuItem(parent.mainFont, "Resume Music: F2", bottom, x, biggest.X + buffer, false);
+
         parent.spriteBatch.End();
       }
 
@@ -241,7 +256,16 @@ namespace Apedaile {
       public void processInput(GameTime gameTime) {
         parent.keyboard.Update(gameTime);
       }
-      
+    }
+
+    private void pauseMusic(GameTime gameTime, float value) {
+      MediaPlayer.Pause();
+      System.Console.WriteLine("Music Paused");
+    }
+
+    private void resumeMusic(GameTime gameTime, float value) {
+      MediaPlayer.Resume();
+      System.Console.WriteLine("Music Resume");
     }
     
   }

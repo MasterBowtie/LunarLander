@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
 
 namespace Apedaile {
   public class GamePlayView : GameStateView {
@@ -21,6 +22,9 @@ namespace Apedaile {
     private float landingRatio = .15f;
     private ushort level = 1;
     private ScoresView score; 
+
+    private Song music;
+
 
     public void setupEffects()
     {
@@ -50,6 +54,8 @@ namespace Apedaile {
     public override void setupInput() {
       keyboard.registerCommand(Keys.Escape, waitforKeyRelease, new IInputDevice.CommandDelegate(exitState));
       keyboard.registerCommand(Keys.Enter, waitforKeyRelease, new IInputDevice.CommandDelegate(nextLevel));
+      keyboard.registerCommand(Keys.F1, waitforKeyRelease, pauseMusic);
+      keyboard.registerCommand(Keys.F2, waitforKeyRelease, resumeMusic);
       // player.setupInput(keyboard);
     }
 
@@ -76,7 +82,11 @@ namespace Apedaile {
       terrain.buildTerrain(2);
     }
 
-    public override void render(GameTime gameTime) {
+    public override void loadMusic(Song music) {
+      this.music = music;
+    }
+
+        public override void render(GameTime gameTime) {
       spriteBatch.Begin();
       spriteBatch.Draw(background, backRect, Color.White);
       spriteBatch.End();
@@ -92,6 +102,9 @@ namespace Apedaile {
     public override void update(GameTime gameTime) {
       particleSystem.update(gameTime);
       player.update(gameTime);
+      if (MediaPlayer.State == MediaState.Stopped) {
+        MediaPlayer.Play(music);
+      }
     }
 
     public override GameStateEnum processInput(GameTime gameTime) {
@@ -122,6 +135,16 @@ namespace Apedaile {
         terrain.buildTerrain(1);
         player.reset(false);
       }
+    }
+
+    private void pauseMusic(GameTime gameTime, float value) {
+      MediaPlayer.Pause();
+      System.Console.WriteLine("Music Paused");
+    }
+
+    private void resumeMusic(GameTime gameTime, float value) {
+      MediaPlayer.Resume();
+      System.Console.WriteLine("Music Resume");
     }
 
     // These were development commands
