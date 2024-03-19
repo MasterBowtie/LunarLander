@@ -1,13 +1,10 @@
 using System;
-using System.IO;
-using System.IO.IsolatedStorage;
-using System.Runtime.Serialization.Json;
-using System.Threading.Tasks;
 using CS5410;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System.Threading.Tasks;
 
 namespace Apedaile
 {
@@ -20,6 +17,7 @@ namespace Apedaile
     private Texture2D background;
     private Rectangle backRect;
     private Scores scores = null;
+    private SaveScore save;
     private bool loading = false;
     private bool saving = false;
 
@@ -29,17 +27,11 @@ namespace Apedaile
       titleFont = contentManager.Load<SpriteFont>("Fonts/CourierPrimeLg");
       background = contentManager.Load<Texture2D>("Images/earth_image");
       backRect = new Rectangle(graphics.PreferredBackBufferWidth - background.Width/4, 0, background.Width/4, background.Height/4);
-      
+    }
 
-      lock (this)
-      {
-        if (!this.loading)
-        {
-          this.loading = true;
-          var result = this.finalizeLoadAsync();
-          result.Wait();
-        }
-      }
+    public void setScores(Scores scores, SaveScore saveScore) {
+      this.save = saveScore;
+      this.scores = scores;
     }
 
     public override GameStateEnum processInput(GameTime gameTime) {
@@ -109,72 +101,9 @@ namespace Apedaile
         scores.submitScore(score, level);
         System.Console.WriteLine("New Scores");
       }
-      lock (this)
-      {
-        if (!this.saving)
-        {
-          this.saving = true;
-          finalizeSaveAsync(scores);
-        }
-      }
-    }
-
-    private async Task finalizeSaveAsync(Scores state)
-    {
-      await Task.Run(() =>
-      {
-        using (IsolatedStorageFile storage = IsolatedStorageFile.GetUserStoreForApplication())
-        {
-          try
-          {
-            using (IsolatedStorageFileStream fs = storage.OpenFile("LunarLander.json", FileMode.Create))
-            {
-              if (fs != null)
-              {
-                DataContractJsonSerializer mySerializer = new DataContractJsonSerializer(typeof(Scores));
-                mySerializer.WriteObject(fs, state);
-              }
-            }
-          }
-          catch (IsolatedStorageException)
-          {
-            // Ideally show something to the user, but this is demo code :)
-          }
-        }
-
-        this.saving = false;
-      });
-    }
-
-    private async Task finalizeLoadAsync()
-    {
-      await Task.Run(() =>
-      {
-        using (IsolatedStorageFile storage = IsolatedStorageFile.GetUserStoreForApplication())
-        {
-          try
-          {
-            if (storage.FileExists("LunarLander.json"))
-            {
-              using (IsolatedStorageFileStream fs = storage.OpenFile("LunarLander.json", FileMode.Open))
-              {
-                if (fs != null)
-                {
-                  DataContractJsonSerializer mySerializer = new DataContractJsonSerializer(typeof(Scores));
-                  scores = (Scores)mySerializer.ReadObject(fs);
-                }
-              }
-            }
-          }
-          catch (IsolatedStorageException)
-          {
-            System.Console.WriteLine("This file doesn't exist yet");
-            // Ideally show something to the user, but this is demo code :)
-          }
-        }
-
-        this.loading = false;
-      });
+      save(scores);
     }
   }
+
+  public delegate Task SaveScore(Scores scores);
 }

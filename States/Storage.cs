@@ -1,6 +1,10 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
+using CS5410;
+using Microsoft.Xna.Framework.Input;
 
 namespace Apedaile {
   [DataContract(Name = "Scores")]
@@ -30,6 +34,25 @@ namespace Apedaile {
         }
       }
       return 1;
+    }
+  }
+
+  [DataContract(Name = "KeyBinds")]
+  public class KeyBindings {
+    
+    [DataMember()]
+    Dictionary<String, String> bindings = new Dictionary<string, string>();
+
+    public KeyBindings() {
+    }
+
+
+    public void submitBinding(String action, String key) {
+      bindings[action] = key;
+    }
+
+    public Dictionary<String, String> getBindings() {
+      return bindings;
     }
   }
 }

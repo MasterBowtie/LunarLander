@@ -6,11 +6,13 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System.Threading.Tasks;
+using System.Linq;
 
 namespace Apedaile {
   public class SettingsView: GameStateView {
 
-    private enum MenuState {
+    public enum MenuState {
       Thrust, 
       RotateRight,
       RotateLeft,
@@ -22,7 +24,9 @@ namespace Apedaile {
     private Texture2D background;
     private Rectangle backRect;
     private Lander player;
-    private Dictionary<MenuState, (IInputDevice.CommandDelegate, Keys)> bindings;
+    private KeyBindings bindings;
+    private Dictionary<MenuState, IInputDevice.CommandDelegate> commands = new Dictionary<MenuState, IInputDevice.CommandDelegate>();
+    private SaveBinding save;
 
     private MenuState currentSelection = MenuState.Thrust;
     private GameStateEnum nextState = GameStateEnum.Settings;
@@ -45,17 +49,33 @@ namespace Apedaile {
       keyboard.registerCommand(Keys.Enter, waitforKeyRelease, new IInputDevice.CommandDelegate(selectItem));
       keyboard.registerCommand(Keys.Escape, waitforKeyRelease, new IInputDevice.CommandDelegate(exitState));
 
-      bindings = new Dictionary<MenuState ,(IInputDevice.CommandDelegate, Keys)>();
-      bindings.Add(MenuState.Thrust ,(new IInputDevice.CommandDelegate(player.moveForward), Keys.W));
-      bindings.Add(MenuState.RotateRight ,(new IInputDevice.CommandDelegate(player.rotateRight), Keys.D));
-      bindings.Add(MenuState.RotateLeft ,(new IInputDevice.CommandDelegate(player.rotateLeft), Keys.A));
-      bindings.Add(MenuState.Pause ,(new IInputDevice.CommandDelegate(player.pause), Keys.P));
+      commands.Add(MenuState.Thrust, new IInputDevice.CommandDelegate(player.moveForward));
+      commands.Add(MenuState.RotateRight, new IInputDevice.CommandDelegate(player.rotateRight));
+      commands.Add(MenuState.RotateLeft, new IInputDevice.CommandDelegate(player.rotateLeft));
+      commands.Add(MenuState.Pause, new IInputDevice.CommandDelegate(player.pause));
+    }
 
-      foreach (var bind in bindings) {
-        if (bind.Value == bindings[MenuState.Pause]) {
-          player.bindCommand(bind.Value.Item1, bind.Value.Item2, true);
-        } else {
-          player.bindCommand(bind.Value.Item1, bind.Value.Item2, false);
+    public void attachBindings(KeyBindings bindings, SaveBinding save) {
+      this.bindings = bindings;
+      this.save = save;
+      if (bindings == null) {
+        this.bindings = new KeyBindings();
+        saveBinding(MenuState.Thrust, Keys.W);
+        saveBinding(MenuState.RotateRight, Keys.D);
+        saveBinding(MenuState.RotateLeft, Keys.A);
+        saveBinding(MenuState.Pause, Keys.P);
+      } else {
+        foreach (var bind in bindings.getBindings()) {
+          List<Keys> keys = Enum.GetValues(typeof(Keys)).Cast<Keys>().ToList();
+          List<MenuState> states = Enum.GetValues(typeof(MenuState)).Cast<MenuState>().ToList();
+          foreach(MenuState state in states) {
+            foreach (Keys key in keys) {
+              if (key.ToString() == bind.Value && state.ToString() == bind.Key) {
+                saveBinding(state, key);
+                break;
+              }
+            }
+          }
         }
       }
     }
@@ -134,6 +154,16 @@ namespace Apedaile {
       currentState = rebind;
     }
 
+    public void saveBinding(MenuState action, Keys key) {
+      if (action == MenuState.Pause) {
+        player.bindCommand(commands[action], key, true);
+      } else {
+        player.bindCommand(commands[action], key, false);
+      }
+      
+      bindings.submitBinding(action.ToString(), key.ToString());
+      save(bindings);
+    }
 
     // This is the different states and these could have been a lot cleaner but this is how it goes for now
 
@@ -166,12 +196,9 @@ namespace Apedaile {
         }
         Keys[] keys = Keyboard.GetState().GetPressedKeys();
         if (keys.Length == 1 && keys[0] != Keys.Enter && keys[0] != Keys.Escape) {
-          parent.bindings[parent.currentSelection] = (parent.bindings[parent.currentSelection].Item1, keys[0]);
-          if (parent.currentSelection == MenuState.Pause) {
-            parent.player.bindCommand(parent.bindings[parent.currentSelection].Item1, keys[0], true);
-          } else { 
-            parent.player.bindCommand(parent.bindings[parent.currentSelection].Item1, keys[0], false);
-          }
+          parent.saveBinding(
+            parent.currentSelection,
+            keys[0]);
           parent.currentState = parent.select;
         }
       }
@@ -185,19 +212,20 @@ namespace Apedaile {
       }
 
       public void render(GameTime gameTime) {
-        Vector2 biggest = parent.mainFont.MeasureString(string.Format("Rotate Right: {0}",parent.bindings[MenuState.RotateRight].Item2));
+        var bindings = parent.bindings.getBindings();
+        Vector2 biggest = parent.mainFont.MeasureString(string.Format("Rotate Right: {0}", bindings[MenuState.RotateRight.ToString()]));
         int buffer = 50;
         float x = parent.graphics.PreferredBackBufferWidth/2 - biggest.X/2 - buffer/2;
       
         parent.spriteBatch.Begin();
 
-        float bottom = parent.drawMenuItem(parent.mainFont, string.Format("Thrust: {0}",parent.bindings[MenuState.Thrust].Item2), parent.graphics.PreferredBackBufferHeight * .2f , x, biggest.X + buffer, parent.currentSelection == MenuState.Thrust);
+        float bottom = parent.drawMenuItem(parent.mainFont, string.Format("Thrust: {0}", bindings[MenuState.Thrust.ToString()]), parent.graphics.PreferredBackBufferHeight * .2f , x, biggest.X + buffer, parent.currentSelection == MenuState.Thrust);
 
-        bottom = parent.drawMenuItem(parent.mainFont, string.Format("Rotate Right: {0}",parent.bindings[MenuState.RotateRight].Item2), bottom, x, biggest.X + buffer, parent.currentSelection == MenuState.RotateRight);
+        bottom = parent.drawMenuItem(parent.mainFont, string.Format("Rotate Right: {0}", bindings[MenuState.RotateRight.ToString()]), bottom, x, biggest.X + buffer, parent.currentSelection == MenuState.RotateRight);
       
-        bottom = parent.drawMenuItem(parent.mainFont, string.Format("Rotate Left: {0}",parent.bindings[MenuState.RotateLeft].Item2), bottom, x, biggest.X + buffer, parent.currentSelection == MenuState.RotateLeft);
+        bottom = parent.drawMenuItem(parent.mainFont, string.Format("Rotate Left: {0}", bindings[MenuState.RotateLeft.ToString()]), bottom, x, biggest.X + buffer, parent.currentSelection == MenuState.RotateLeft);
       
-        bottom = parent.drawMenuItem(parent.mainFont, string.Format("Pause: {0}",parent.bindings[MenuState.Pause].Item2), bottom, x, biggest.X + buffer, parent.currentSelection == MenuState.Pause);
+        bottom = parent.drawMenuItem(parent.mainFont, string.Format("Pause: {0}", bindings[MenuState.Pause.ToString()]), bottom, x, biggest.X + buffer, parent.currentSelection == MenuState.Pause);
 
         bottom = parent.drawMenuItem(parent.mainFont, "Select: Enter", bottom, x, biggest.X + buffer, false);
 
@@ -215,6 +243,7 @@ namespace Apedaile {
       }
       
     }
+    
   }
 
   public interface SettingState {
@@ -222,4 +251,6 @@ namespace Apedaile {
       public void update(GameTime gameTime);
       public void processInput(GameTime gameTime);
   }
+
+  public delegate Task SaveBinding(KeyBindings item);
 }
