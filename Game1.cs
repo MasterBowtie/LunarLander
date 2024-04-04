@@ -20,8 +20,8 @@ public class LunarLander : Game
   private Dictionary<GameStateEnum, IGameState> states;
   private bool loading = false;
   private bool saving = false;
-  public Scores scores = null;
-  public KeyBindings keyBindings = null;
+  public Storage storage = null;
+  public KeyboardInput keyboard;
 
   public Song music;
   
@@ -71,9 +71,11 @@ public class LunarLander : Game
     play.attachScore(scoresView);
     settings.setupPlayer(player);
 
+    keyboard = new KeyboardInput();
+
     // Give all game states a chance to initialize Inputs
     foreach(var item in states) {
-      item.Value.setupInput();
+      item.Value.setupInput(storage, keyboard);
     }      
     lock (this) {
       if (!this.saving){
@@ -82,8 +84,9 @@ public class LunarLander : Game
         result.Wait();
       }
     }
-    scoresView.setScores(scores, finalizeScoreSaveAsync);
-    settings.attachBindings(keyBindings, finalizeBindSaveAsync);
+
+    loadState();
+    storage.loadCommands();
 
     // Start in the Main Menu
     currentState = states[GameStateEnum.MainMenu];
@@ -128,116 +131,66 @@ public class LunarLander : Game
     currentState.render(gameTime);
     base.Draw(gameTime);
   }
-
-  private async Task finalizeScoreSaveAsync(Scores state)
-    {
-      await Task.Run(() =>
-      {
-        using (IsolatedStorageFile storage = IsolatedStorageFile.GetUserStoreForApplication())
-        {
-          try
-          {
-            using (IsolatedStorageFileStream fs = storage.OpenFile("LunarLander.json", FileMode.Create))
-            {
-              if (fs != null)
-              {
-                DataContractJsonSerializer mySerializer = new DataContractJsonSerializer(typeof(Scores));
-                mySerializer.WriteObject(fs, state);
-              }
+  
+private void saveState() {
+        lock (this) {
+            if (!this.saving) {
+                this.saving = true;
+                finalizeSaveAsync(storage);
             }
-          }
-          catch (IsolatedStorageException)
-          {
-            // Ideally show something to the user, but this is demo code :)
-          }
         }
-
-        this.saving = false;
-      });
     }
 
-  private async Task finalizeBindSaveAsync(KeyBindings state)
-    {
-      await Task.Run(() =>
-      {
-        using (IsolatedStorageFile storage = IsolatedStorageFile.GetUserStoreForApplication())
-        {
-          try
-          {
-            using (IsolatedStorageFileStream fs = storage.OpenFile("LunarLanderBinds.json", FileMode.Create))
-            {
-              if (fs != null)
-              {
-                DataContractJsonSerializer mySerializer = new DataContractJsonSerializer(typeof(KeyBindings));
-                mySerializer.WriteObject(fs, state);
-              }
-            }
-          }
-          catch (IsolatedStorageException)
-          {
-            // Ideally show something to the user, but this is demo code :)
-          }
-        }
-
-        this.saving = false;
-      });
-    }
-
-  private async Task finalizeLoadAsync()
-    {
-      await Task.Run(() =>
-      {
-        using (IsolatedStorageFile storage = IsolatedStorageFile.GetUserStoreForApplication())
-        {
-          try
-          {
-            if (storage.FileExists("LunarLander.json"))
-            {
-              using (IsolatedStorageFileStream fs = storage.OpenFile("LunarLander.json", FileMode.Open))
-              {
-                if (fs != null)
-                {
-                  DataContractJsonSerializer mySerializer = new DataContractJsonSerializer(typeof(Scores));
-                  scores = (Scores)mySerializer.ReadObject(fs);
+    private async Task finalizeSaveAsync(Storage state) {
+        await Task.Run(() => {
+            using (IsolatedStorageFile storageFile = IsolatedStorageFile.GetUserStoreForApplication()) {
+                try {
+                    using (IsolatedStorageFileStream fs = storageFile.OpenFile("LunarLander.json", System.IO.FileMode.Create)) {
+                        if (fs != null) {
+                            DataContractJsonSerializer mySerializer = new DataContractJsonSerializer(typeof(Storage));
+                            mySerializer.WriteObject(fs, state);
+                        }
+                    }
+                } catch(IsolatedStorageException err) {
+                    System.Console.WriteLine("There was an error writing to storage\n{0}", err);
                 }
-              }
             }
-          }
-          catch (IsolatedStorageException)
-          {
-            System.Console.WriteLine("This file doesn't exist yet");
-            // Ideally show something to the user, but this is demo code :)
-          }
-        }
 
-        this.loading = false;
-      });
-      await Task.Run(() =>
-      {
-        using (IsolatedStorageFile storage = IsolatedStorageFile.GetUserStoreForApplication())
-        {
-          try
-          {
-            if (storage.FileExists("LunarLanderBinds.json"))
-            {
-              using (IsolatedStorageFileStream fs = storage.OpenFile("LunarLanderBinds.json", FileMode.Open))
-              {
-                if (fs != null)
-                {
-                  DataContractJsonSerializer mySerializer = new DataContractJsonSerializer(typeof(KeyBindings));
-                  keyBindings = (KeyBindings)mySerializer.ReadObject(fs);
-                }
-              }
-            }
-          }
-          catch (IsolatedStorageException)
-          {
-            System.Console.WriteLine("This file doesn't exist yet");
-            // Ideally show something to the user, but this is demo code :)
-          }
-        }
-
-        this.loading = false;
-      });
+            this.saving = false;
+        });
     }
+
+    private void loadState() {
+        lock (this) {
+            if (!this.loading) {
+                this.loading = true;
+                var result = finalizeLoadAsync();
+                result.Wait();
+            }
+        }
+    }
+
+    private async Task finalizeLoadAsync() {
+        await Task.Run(() => {
+           using (IsolatedStorageFile storageFile = IsolatedStorageFile.GetMachineStoreForApplication()) {
+            try {
+                if (storageFile.FileExists("LunarLander.json")) {
+                    using (IsolatedStorageFileStream fs = storageFile.OpenFile("LunarLander.json", FileMode.Open)) {
+                        if (fs != null) {
+                            DataContractJsonSerializer mySerializer = new DataContractJsonSerializer(typeof(Storage));
+                            storage = (Storage)mySerializer.ReadObject(fs);
+                        }
+                    }
+                } else {
+                    System.Console.WriteLine("File doesn't exist yet! Building storage and saving it now");
+                    saveState();
+                }
+            } catch (IsolatedStorageException err) {
+                System.Console.WriteLine("Something broke: {0}", err);
+            }
+           } 
+           this.loading = false;
+        });
+    }
+  
 }

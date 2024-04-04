@@ -1,85 +1,75 @@
+using System;
+using System.Collections.Generic;
+using System.Dynamic;
+using Apedaile;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using System.Collections.Generic;
 
-namespace CS5410
-{
-  ///<summary>
-  ///Derived input device for the PC keyboard
-  ///</summary>
-  public class KeyboardInput : IInputDevice 
-  {
+namespace CS5410 {
+  public class KeyboardInput: IInputDevice {
+    private KeyboardState previousState;
 
-    private KeyboardState m_statePrevious;
+    private Dictionary<GameStateEnum, Dictionary<Actions, CommandEntry>> stateCommands = new Dictionary<GameStateEnum, Dictionary<Actions, CommandEntry>>(); 
 
-    /// <summary>
-    /// Track all registered command in this dictionary
-    /// </summary>
-    private Dictionary<Keys, CommandEntry> m_commandEntries = new Dictionary<Keys, CommandEntry>();
-
-
-    private struct CommandEntry {
+    public struct CommandEntry {
       public Keys key;
       public bool keyPressOnly;
       public IInputDevice.CommandDelegate callback;
+      public Actions action;
 
-      public CommandEntry(Keys key, bool keyPressOnly, IInputDevice.CommandDelegate callback) {
+      public CommandEntry(Keys key, bool keyPressOnly, IInputDevice.CommandDelegate callback, Actions action) {
         this.key = key;
         this.keyPressOnly = keyPressOnly;
         this.callback = callback;
+        this.action = action;
       }
     }
-
-    public List<IInputDevice.CommandDelegate> getCallbacks() {
-      List<IInputDevice.CommandDelegate> entries = new List<IInputDevice.CommandDelegate>();
-      foreach (var item in m_commandEntries) {
-        entries.Add(item.Value.callback);
-      }
-      return entries;
+    
+    public Dictionary<GameStateEnum, Dictionary<Actions, CommandEntry>> getStateCommands() {
+      return stateCommands;
     }
 
-    public Keys getKey(IInputDevice.CommandDelegate callback) {
-      foreach (var item in m_commandEntries) {
-        if (item.Value.callback == callback) {
-          return item.Key;
+    public void registerCommand(Keys key, bool keyPressOnly, IInputDevice.CommandDelegate callback, GameStateEnum state, Actions action) {
+      if (stateCommands.ContainsKey(state)) {
+        var commandEntries = stateCommands[state];
+        Actions remove = Actions.none;
+        foreach (var item in commandEntries) {
+          if (item.Value.callback == callback) {
+            remove = item.Key;
+          }
         }
-      }
-      return Keys.None;
-    }
+        commandEntries.Remove(remove);
 
-    ///<summary>
-    /// Registers a callback-based command
-    ///</summary>
-    public void registerCommand(Keys key, bool keyPressOnly, IInputDevice.CommandDelegate callback) {
-      // If callback already registered, remove it!
-      foreach (var item in m_commandEntries) {
-        if (item.Value.callback == callback) {
-          m_commandEntries.Remove(item.Key);
+        if (commandEntries.ContainsKey(action)) {
+          commandEntries.Remove(action);
         }
+
+        commandEntries.Add(action, new CommandEntry(key, keyPressOnly, callback, action));
       }
-      // If key already registered, remove
-      if (m_commandEntries.ContainsKey(key)) {
-        m_commandEntries.Remove(key);
+      else {
+        stateCommands.Add(state, new Dictionary<Actions, CommandEntry>());
+        stateCommands[state].Add(action, new CommandEntry(key, keyPressOnly, callback, action));
       }
-      m_commandEntries.Add(key, new CommandEntry(key, keyPressOnly, callback));
     }
 
     public void Update(GameTime gameTime) {
-      KeyboardState state = Keyboard.GetState();
-      
-      foreach(CommandEntry entry in this.m_commandEntries.Values){
-        if (entry.keyPressOnly && keyPressed(entry.key)) {
-          entry.callback(gameTime, 1.0f);
+      KeyboardState keyState = Keyboard.GetState();
+
+      foreach (var commandEntries in stateCommands.Values) {
+        foreach (CommandEntry entry in commandEntries.Values){
+          if (entry.keyPressOnly && keyPressed(entry.key)) {
+            entry.callback(gameTime, 1.0f);
+          }
+          else if (!entry.keyPressOnly && keyState.IsKeyDown(entry.key)) {
+            entry.callback(gameTime, 1.0f);
+          }
         }
-        else if (!entry.keyPressOnly && state.IsKeyDown(entry.key)){
-          entry.callback(gameTime, 1.0f);
-        }
+        previousState = keyState;
       }
-      m_statePrevious = state;
     }
 
     private bool keyPressed(Keys key) {
-      return (Keyboard.GetState().IsKeyDown(key) && !m_statePrevious.IsKeyDown(key));
+      return (Keyboard.GetState().IsKeyDown(key) && !previousState.IsKeyDown(key));
     }
   }
 }

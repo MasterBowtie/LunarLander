@@ -1,3 +1,4 @@
+using Apedaile;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -28,13 +29,14 @@ namespace CS5410 {
     private GameStateEnum nextState = GameStateEnum.MainMenu;
     private bool waitforKeyRelease = true;
 
-    public override void setupInput()
+    public override void setupInput(Storage storage, KeyboardInput keyboard)
     {
-      keyboard.registerCommand(Keys.Up, waitforKeyRelease, new IInputDevice.CommandDelegate(moveUp));
-      keyboard.registerCommand(Keys.Down, waitforKeyRelease, new IInputDevice.CommandDelegate(moveDown));
-      keyboard.registerCommand(Keys.Enter, waitforKeyRelease, new IInputDevice.CommandDelegate(selectItem));
-      keyboard.registerCommand(Keys.F1, waitforKeyRelease, new IInputDevice.CommandDelegate(pauseMusic));
-      keyboard.registerCommand(Keys.F2, waitforKeyRelease, new IInputDevice.CommandDelegate(resumeMusic));
+      this.keyboard = keyboard;
+      storage.registerCommand(GameStateEnum.MainMenu, Keys.Up, waitforKeyRelease, Actions.up, new IInputDevice.CommandDelegate(moveUp));
+      storage.registerCommand(GameStateEnum.MainMenu, Keys.Down, waitforKeyRelease, Actions.down, new IInputDevice.CommandDelegate(moveDown));
+      storage.registerCommand(GameStateEnum.MainMenu, Keys.Enter, waitforKeyRelease, Actions.select, new IInputDevice.CommandDelegate(selectItem));
+      storage.registerCommand(GameStateEnum.MainMenu, Keys.F1, waitforKeyRelease, Actions.pauseMusic, new IInputDevice.CommandDelegate(pauseMusic));
+      storage.registerCommand(GameStateEnum.MainMenu, Keys.F2, waitforKeyRelease, Actions.playMusic, new IInputDevice.CommandDelegate(resumeMusic));
     }
 
     public override void loadContent(ContentManager contentManager){

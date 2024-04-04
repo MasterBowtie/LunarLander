@@ -51,12 +51,13 @@ namespace Apedaile {
       this.score = score;
     }
 
-    public override void setupInput() {
-      keyboard.registerCommand(Keys.Escape, waitforKeyRelease, new IInputDevice.CommandDelegate(exitState));
-      keyboard.registerCommand(Keys.Enter, waitforKeyRelease, new IInputDevice.CommandDelegate(nextLevel));
-      keyboard.registerCommand(Keys.F1, waitforKeyRelease, pauseMusic);
-      keyboard.registerCommand(Keys.F2, waitforKeyRelease, resumeMusic);
-      // player.setupInput(keyboard);
+    public override void setupInput(Storage storage, KeyboardInput keyboard) {
+      this.keyboard = keyboard;
+      storage.registerCommand(GameStateEnum.GamePlay, Keys.Escape, waitforKeyRelease, Actions.exit, new IInputDevice.CommandDelegate(exitState));
+      storage.registerCommand(GameStateEnum.GamePlay, Keys.Enter, waitforKeyRelease, Actions.select, new IInputDevice.CommandDelegate(nextLevel));
+      storage.registerCommand(GameStateEnum.GamePlay, Keys.F1, waitforKeyRelease, Actions.pauseMusic, pauseMusic);
+      storage.registerCommand(GameStateEnum.GamePlay, Keys.F2, waitforKeyRelease, Actions.playMusic, resumeMusic);
+      player.setupInput(keyboard);
     }
 
     public void setupPlayer(Lander player) {

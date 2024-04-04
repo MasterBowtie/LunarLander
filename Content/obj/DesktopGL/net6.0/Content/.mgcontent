@@ -8,14 +8,22 @@
     <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Fonts/CourierPrimeLg.spritefont</File>
     <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Fonts/CourierPrimeSm.spritefont</File>
     <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Images/1968_Earthrise.jpeg</File>
+    <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Images/background.jpg</File>
     <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Images/earth_image.jpg</File>
     <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Images/menu.png</File>
     <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Images/MenuSelector.png</File>
     <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Images/particle.png</File>
     <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Images/player.png</File>
     <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Images/point.png</File>
+    <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Sounds/Big_Eyes.mp3</File>
+    <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Sounds/hq-explosion.mp3</File>
+    <File>C:/Users/Cody/Documents/School/2024 Spring/CS5410 Game Dev/Apedaile_Cody_Project3_C#/LunarLander/Content/Sounds/rocketthrust.mp3</File>
   </SourceFiles>
   <DestFiles>
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
+    <File xsi:nil="true" />
     <File xsi:nil="true" />
     <File xsi:nil="true" />
     <File xsi:nil="true" />

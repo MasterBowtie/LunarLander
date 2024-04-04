@@ -1,3 +1,4 @@
+using Apedaile;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -13,10 +14,9 @@ namespace CS5410 {
     public void initialize(GraphicsDevice graphicsDevice, GraphicsDeviceManager graphics) {
       this.graphics = graphics;
       this.spriteBatch = new SpriteBatch(graphicsDevice);
-      this.keyboard = new KeyboardInput();
     }
     
-    public abstract void setupInput();
+    public abstract void setupInput(Storage storage, KeyboardInput keyboard);
 
     public abstract void loadContent(ContentManager contentManager);
 

@@ -1,3 +1,4 @@
+using Apedaile;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -9,7 +10,7 @@ namespace CS5410 {
 
     void loadContent(ContentManager contentManager);
 
-    void setupInput();
+    void setupInput(Storage storage, KeyboardInput keyboard);
 
     void loadMusic(Song music);
 

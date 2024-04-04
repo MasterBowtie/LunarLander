@@ -1,18 +1,19 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using CS5410;
 using Microsoft.Xna.Framework.Input;
 
 namespace Apedaile {
-  [DataContract(Name = "Scores")]
-  public class Scores {
+  [DataContract(Name = "Storage")]
+  public class Storage {
     [DataMember()]
     public List<(uint, ushort)> HighScores = new List<(uint, ushort)>();
 
-    public Scores() {
+    private KeyboardInput keyboard;
+
+    public Storage(KeyboardInput keyboard) {
+      this.keyboard = keyboard;
     }
 
     public void submitScore(uint score, ushort level)
@@ -35,24 +36,56 @@ namespace Apedaile {
       }
       return 1;
     }
-  }
 
-  [DataContract(Name = "KeyBinds")]
-  public class KeyBindings {
-    
     [DataMember()]
-    Dictionary<String, String> bindings = new Dictionary<string, string>();
+    Dictionary<string, Dictionary<string, CommandString>> bindings = new Dictionary<string, Dictionary<string, CommandString>>();
 
-    public KeyBindings() {
+    public struct CommandString {
+      public string key;
+      public bool keyPressOnly;
+      public string action;
+
+      public CommandString(Keys key, bool keyPressOnly, Actions action) {
+        this.key = key.ToString();
+        this.keyPressOnly = keyPressOnly;
+        this.action = action.ToString();
+      }
     }
 
-
-    public void submitBinding(String action, String key) {
-      bindings[action] = key;
+    public void registerCommand(GameStateEnum state, Keys key, bool keyPressOnly, Actions action, IInputDevice.CommandDelegate callback) {
+      KeyboardInput.CommandEntry commandEntry = new KeyboardInput.CommandEntry(key, keyPressOnly, callback, action);
+      keyboard.registerCommand(key, keyPressOnly, callback, state, action);
+      if (bindings.ContainsKey(state.ToString())) {
+        if (bindings[state.ToString()].ContainsKey(key.ToString())) {
+          bindings[state.ToString()][key.ToString()] = new CommandString(key, keyPressOnly, action);
+        }
+        else {
+          bindings[state.ToString()].Add(key.ToString(), new CommandString(key, keyPressOnly, action));
+        }
+      } 
+      else {
+        bindings.Add(state.ToString(), new Dictionary<string, CommandString>());
+        bindings[state.ToString()].Add(key.ToString(), new CommandString(key, keyPressOnly, action));
+      }
     }
 
-    public Dictionary<String, String> getBindings() {
-      return bindings;
+    public void loadCommands() {
+      var stateCommands = keyboard.getStateCommands();
+      foreach (var state in Enum.GetValues(typeof(GameStateEnum))) {
+        var stateBindings = bindings[state.ToString()];
+        foreach (var action in Enum.GetValues(typeof(Actions))) {
+          if (stateBindings.ContainsKey(action.ToString())) {
+            foreach (var key in Enum.GetValues(typeof(Keys))) {
+              if (stateBindings[key.ToString()].action == action.ToString()) {
+                KeyboardInput.CommandEntry commandEntry = stateCommands[(GameStateEnum)state][(Actions)action];
+                commandEntry.key = (Keys)key;
+                commandEntry.action = (Actions)action;
+              }
+            }
+          }
+        }
+      }
     }
+
   }
 }

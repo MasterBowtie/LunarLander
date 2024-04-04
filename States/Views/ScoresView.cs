@@ -18,9 +18,8 @@ namespace Apedaile
     private Texture2D background;
     private Rectangle backRect;
     private Song music;
-    private Scores scores = null;
-    private SaveScore save;
-
+    private Storage storage;
+    private SaveBinding save;
 
     public override void loadContent(ContentManager contentManager)
     {
@@ -32,11 +31,6 @@ namespace Apedaile
     
     public override void loadMusic(Song music) {
       this.music = music;
-    }
-
-    public void setScores(Scores scores, SaveScore saveScore) {
-      this.save = saveScore;
-      this.scores = scores;
     }
 
     public override GameStateEnum processInput(GameTime gameTime) {
@@ -62,8 +56,8 @@ namespace Apedaile
       spriteBatch.DrawString(
         titleFont, "High Scores", new Vector2(graphics.PreferredBackBufferWidth / 2 - stringSize.X / 2, graphics.PreferredBackBufferHeight * .1f), Color.White);
 
-      if (scores != null) {
-        foreach (var item in scores.HighScores) {
+      if (storage != null) {
+        foreach (var item in storage.HighScores) {
           message = String.Format("Level {0}: {1}", item.Item2, item.Item1);
           bottom = drawMenuItem(mainFont, message, bottom);
         }
@@ -77,11 +71,14 @@ namespace Apedaile
       spriteBatch.End();
     }
 
-    public override void setupInput() {
-      keyboard.registerCommand(Keys.Escape, true, exitState);
-      keyboard.registerCommand(Keys.F1, true, pauseMusic);
-      keyboard.registerCommand(Keys.F2, true, resumeMusic);
+    public override void setupInput(Storage storage, KeyboardInput keyboard) {
+      this.keyboard = keyboard;
+      storage.registerCommand(GameStateEnum.HighScores, Keys.Escape, true, Actions.exit, exitState);
+      storage.registerCommand(GameStateEnum.HighScores, Keys.F1, true, Actions.pauseMusic, pauseMusic);
+      storage.registerCommand(GameStateEnum.HighScores, Keys.F2, true, Actions.playMusic, resumeMusic);
     }
+
+    public void attachSave()
 
     public override void update(GameTime gameTime) {
       if (MediaPlayer.State == MediaState.Stopped) {
@@ -103,8 +100,8 @@ namespace Apedaile
     }
 
     public void saveScore(uint score, ushort level) {
-      if (scores != null) {
-        scores.submitScore(score, level);
+      if (storage != null) {
+        storage.submitScore(score, level);
       } else {
         scores = new Scores();
         scores.submitScore(score, level);
@@ -124,5 +121,5 @@ namespace Apedaile
     }
   }
 
-  public delegate Task SaveScore(Scores scores);
+  public delegate Task SaveScore();
 }

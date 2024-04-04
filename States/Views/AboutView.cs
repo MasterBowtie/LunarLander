@@ -18,6 +18,7 @@ namespace Apedaile
     private Texture2D background;
     private Rectangle backRect;
     private Song music;
+    private KeyboardInput keyboard;
 
     public override void loadContent(ContentManager contentManager)
     {
@@ -61,10 +62,11 @@ namespace Apedaile
       spriteBatch.End();
     }
 
-    public override void setupInput() {
-      keyboard.registerCommand(Keys.Escape, true, exitState);
-      keyboard.registerCommand(Keys.F1, true, pauseMusic);
-      keyboard.registerCommand(Keys.F2, true, resumeMusic);
+    public override void setupInput(Storage storage, KeyboardInput keyboard) {
+      this.keyboard = keyboard;
+      storage.registerCommand(GameStateEnum.About, Keys.Escape, true, Actions.exit, exitState);
+      storage.registerCommand(GameStateEnum.About, Keys.F1, true, Actions.pauseMusic, pauseMusic);
+      storage.registerCommand(GameStateEnum.About, Keys.F2, true, Actions.playMusic, resumeMusic);
     }
 
     public override void update(GameTime gameTime) {
