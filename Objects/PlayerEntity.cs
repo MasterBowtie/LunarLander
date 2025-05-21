@@ -13,14 +13,11 @@ namespace Apedaile {
       this.graphics = graphics;
       this.spriteBatch = spriteBatch;
       setupStates();
-      keyboard = new KeyboardInput();
     }
 
     protected abstract void setupStates();
 
     public abstract void setupInput(KeyboardInput keyboard);
-
-    public abstract void processInput(GameTime gameTime);
 
     public abstract void loadContent(ContentManager contentManager);
 

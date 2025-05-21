@@ -69,24 +69,24 @@ public class LunarLander : Game
 
     play.setupPlayer(player);
     play.attachScore(scoresView);
-    settings.setupPlayer(player);
+    settings.setupExtras(player, saveState);
 
     keyboard = new KeyboardInput();
+    loadState();
+    if (storage == null) {
+      storage = new Storage(keyboard);
+    } else {
+      storage.attachKeyboard(keyboard);
+    }
 
     // Give all game states a chance to initialize Inputs
     foreach(var item in states) {
       item.Value.setupInput(storage, keyboard);
-    }      
-    lock (this) {
-      if (!this.saving){
-        this.saving = true;
-        var result = finalizeLoadAsync();
-        result.Wait();
-      }
     }
-
-    loadState();
+    
     storage.loadCommands();
+
+    scoresView.setSave(saveState);
 
     // Start in the Main Menu
     currentState = states[GameStateEnum.MainMenu];
@@ -104,13 +104,12 @@ public class LunarLander : Game
 
     GamePlayView gameplay = (GamePlayView)states[GameStateEnum.GamePlay];
     gameplay.setupEffects();
-
-
   }
 
   protected override void Update(GameTime gameTime) {
 
     GameStateEnum nextStateEnum = currentState.processInput(gameTime);
+    keyboard.Update(gameTime, nextStateEnum);
 
     // Special Case for exiting Game
     if (nextStateEnum == GameStateEnum.Exit) {
@@ -133,19 +132,19 @@ public class LunarLander : Game
   }
   
 private void saveState() {
-        lock (this) {
-            if (!this.saving) {
-                this.saving = true;
-                finalizeSaveAsync(storage);
-            }
+    lock (this) {
+      if (!this.saving) {
+        this.saving = true;
+        finalizeSaveAsync(storage);
         }
-    }
+      }
+  }
 
     private async Task finalizeSaveAsync(Storage state) {
         await Task.Run(() => {
             using (IsolatedStorageFile storageFile = IsolatedStorageFile.GetUserStoreForApplication()) {
                 try {
-                    using (IsolatedStorageFileStream fs = storageFile.OpenFile("LunarLander.json", System.IO.FileMode.Create)) {
+                    using (IsolatedStorageFileStream fs = storageFile.OpenFile("LunarLander.json", FileMode.Create)) {
                         if (fs != null) {
                             DataContractJsonSerializer mySerializer = new DataContractJsonSerializer(typeof(Storage));
                             mySerializer.WriteObject(fs, state);
@@ -155,7 +154,6 @@ private void saveState() {
                     System.Console.WriteLine("There was an error writing to storage\n{0}", err);
                 }
             }
-
             this.saving = false;
         });
     }
@@ -172,7 +170,7 @@ private void saveState() {
 
     private async Task finalizeLoadAsync() {
         await Task.Run(() => {
-           using (IsolatedStorageFile storageFile = IsolatedStorageFile.GetMachineStoreForApplication()) {
+           using (IsolatedStorageFile storageFile = IsolatedStorageFile.GetUserStoreForApplication()) {
             try {
                 if (storageFile.FileExists("LunarLander.json")) {
                     using (IsolatedStorageFileStream fs = storageFile.OpenFile("LunarLander.json", FileMode.Open)) {
@@ -181,9 +179,6 @@ private void saveState() {
                             storage = (Storage)mySerializer.ReadObject(fs);
                         }
                     }
-                } else {
-                    System.Console.WriteLine("File doesn't exist yet! Building storage and saving it now");
-                    saveState();
                 }
             } catch (IsolatedStorageException err) {
                 System.Console.WriteLine("Something broke: {0}", err);

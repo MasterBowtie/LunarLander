@@ -52,7 +52,6 @@ namespace CS5410 {
     }
 
     public override GameStateEnum processInput(GameTime gameTime){
-      keyboard.Update(gameTime);
       if (nextState != GameStateEnum.MainMenu) {
         GameStateEnum nextState = this.nextState;
         this.nextState = GameStateEnum.MainMenu;

@@ -52,10 +52,10 @@ namespace CS5410 {
       }
     }
 
-    public void Update(GameTime gameTime) {
+    public void Update(GameTime gameTime, GameStateEnum state) {
       KeyboardState keyState = Keyboard.GetState();
-
-      foreach (var commandEntries in stateCommands.Values) {
+      if (state != GameStateEnum.Exit) {
+      Dictionary<Actions,CommandEntry> commandEntries = stateCommands[state];
         foreach (CommandEntry entry in commandEntries.Values){
           if (entry.keyPressOnly && keyPressed(entry.key)) {
             entry.callback(gameTime, 1.0f);
@@ -64,6 +64,7 @@ namespace CS5410 {
             entry.callback(gameTime, 1.0f);
           }
         }
+      
         previousState = keyState;
       }
     }

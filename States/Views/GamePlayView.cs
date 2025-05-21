@@ -109,8 +109,6 @@ namespace Apedaile {
     }
 
     public override GameStateEnum processInput(GameTime gameTime) {
-      keyboard.Update(gameTime);
-      player.processInput(gameTime);
       if (nextState != GameStateEnum.GamePlay) {
         GameStateEnum newState = this.nextState;
         this.nextState = GameStateEnum.GamePlay;

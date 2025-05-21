@@ -10,6 +10,6 @@ namespace CS5410
         public delegate void CommandDelegate(GameTime gameTime, float value);
         public delegate void CommandDelegatePosition(GameTime GameTime, int x, int y);
 
-        void Update(GameTime gameTime);
+        void Update(GameTime gameTime, GameStateEnum state);
     }
 }

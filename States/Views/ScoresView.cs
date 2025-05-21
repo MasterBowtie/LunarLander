@@ -19,7 +19,11 @@ namespace Apedaile
     private Rectangle backRect;
     private Song music;
     private Storage storage;
-    private SaveBinding save;
+    private SaveScore save;
+
+    public void setSave(SaveScore saveScore) {
+      this.save = saveScore;
+    }
 
     public override void loadContent(ContentManager contentManager)
     {
@@ -34,7 +38,6 @@ namespace Apedaile
     }
 
     public override GameStateEnum processInput(GameTime gameTime) {
-      keyboard.Update(gameTime);
       if (nextState != GameStateEnum.HighScores)
       {
         GameStateEnum nextState = this.nextState;
@@ -73,12 +76,11 @@ namespace Apedaile
 
     public override void setupInput(Storage storage, KeyboardInput keyboard) {
       this.keyboard = keyboard;
+      this.storage = storage;
       storage.registerCommand(GameStateEnum.HighScores, Keys.Escape, true, Actions.exit, exitState);
       storage.registerCommand(GameStateEnum.HighScores, Keys.F1, true, Actions.pauseMusic, pauseMusic);
       storage.registerCommand(GameStateEnum.HighScores, Keys.F2, true, Actions.playMusic, resumeMusic);
     }
-
-    public void attachSave()
 
     public override void update(GameTime gameTime) {
       if (MediaPlayer.State == MediaState.Stopped) {
@@ -102,12 +104,8 @@ namespace Apedaile
     public void saveScore(uint score, ushort level) {
       if (storage != null) {
         storage.submitScore(score, level);
-      } else {
-        scores = new Scores();
-        scores.submitScore(score, level);
-        System.Console.WriteLine("New Scores");
-      }
-      save(scores);
+      } 
+      save();
     }
 
     private void pauseMusic(GameTime gameTime, float value) {
@@ -121,5 +119,5 @@ namespace Apedaile
     }
   }
 
-  public delegate Task SaveScore();
+  public delegate void SaveScore();
 }

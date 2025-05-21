@@ -33,7 +33,7 @@ namespace CS5410
         public void create(Vector2 center, float angle)
         {
             float size = (float)m_random.nextGaussian(m_sizeMean, m_sizeStdDev);
-            angle = (float)m_random.nextGaussian( angle ,m_angleStdDev);
+            angle = (float)m_random.nextGaussian(angle ,m_angleStdDev);
             var p = new Particle(
                     center,
                     new Vector2((float) Math.Cos(angle), (float)Math.Sin(angle)),

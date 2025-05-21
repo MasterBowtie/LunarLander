@@ -76,15 +76,6 @@ namespace Apedaile {
       this.keyboard = keyboard;
     }
 
-    public void bindCommand(IInputDevice.CommandDelegate callback, Keys key, bool pause) {
-      if (pause) {
-        keyboard.registerCommand(key, true, callback);
-      }
-      else {
-        keyboard.registerCommand(key, waitforKeyRelease, callback);
-      }
-    }
-
     public override void loadContent(ContentManager contentManager) {
       image = contentManager.Load<Texture2D>("Images/player");
       menuBG = contentManager.Load<Texture2D>("Images/menu");
@@ -103,10 +94,6 @@ namespace Apedaile {
       thrust = contentManager.Load<SoundEffect>("Sounds/rocketthrust");
       thrustDur = thrust.Duration;
       explosion = contentManager.Load<SoundEffect>("Sounds/hq-explosion");
-    }
-
-    public override void processInput(GameTime gameTime){
-      keyboard.Update(gameTime);
     }
 
     public override void update(GameTime gameTime) {
@@ -458,7 +445,7 @@ namespace Apedaile {
 
       }
       public void processInput(GameTime gameTime) {
-        parent.keyboard.Update(gameTime);
+        parent.keyboard.Update(gameTime, GameStateEnum.GamePlay);
       }
 
     }

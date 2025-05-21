@@ -18,7 +18,6 @@ namespace Apedaile
     private Texture2D background;
     private Rectangle backRect;
     private Song music;
-    private KeyboardInput keyboard;
 
     public override void loadContent(ContentManager contentManager)
     {
@@ -33,7 +32,6 @@ namespace Apedaile
     }
 
     public override GameStateEnum processInput(GameTime gameTime) {
-      keyboard.Update(gameTime);
       if (nextState != GameStateEnum.About)
       {
         GameStateEnum nextState = this.nextState;
